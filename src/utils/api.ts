@@ -50,7 +50,7 @@ apiClient.interceptors.response.use(
         }
 
         // Refresh the token
-        const res = await axios.post(`${API_ROOT}/api/users/refresh-token`, {
+        const res = await axios.post(`${API_ROOT}/users/refresh-token`, {
           refreshToken: rt,
         });
 

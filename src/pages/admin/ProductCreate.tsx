@@ -84,7 +84,7 @@ const ProductCreate: React.FC = () => {
           form.append("filename", filename);
 
           const uploadRes = await axios.post(
-            `${API_ROOT}/api/uploads/frontend`,
+            `${API_ROOT}/uploads/frontend`,
             form,
             {
               headers: token ? { "Authorization": `Bearer ${token}` } : {},
