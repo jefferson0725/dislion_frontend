@@ -8,12 +8,16 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import WishlistDrawer from "@/components/WishlistDrawer";
 import Footer from "@/components/Footer";
 import { useWishlist } from "@/context/WishlistContext";
+import { useDataVersion } from "@/hooks/useDataVersion";
 import heroBanner from "@/assets/logo.webp";
 
 // products will be loaded from local JSON file
 
 const Index = () => {
   const { wishlist } = useWishlist();
+  // Auto-reload when data.json changes (checks every 5 seconds)
+  useDataVersion(5000);
+  
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
