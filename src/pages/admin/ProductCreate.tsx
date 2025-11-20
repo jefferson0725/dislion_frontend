@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import apiFetch from "../../utils/api";
+import apiFetch, { apiClient } from "../../utils/api";
 import { getToken } from "../../utils/tokenStore";
 import { toast } from "../../hooks/use-toast";
 import ProtectedRoute from "../../components/ProtectedRoute";
@@ -76,15 +76,14 @@ const ProductCreate: React.FC = () => {
         const t = toast({ title: "Guardando imagen", description: `0%` });
         
         try {
-          const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:4000";
           const token = getToken();
           
           const form = new FormData();
           form.append("image", imageFile);
           form.append("filename", filename);
 
-          const uploadRes = await axios.post(
-            `${API_ROOT}/api/uploads/frontend`,
+          const uploadRes = await apiClient.post(
+            `/api/uploads/frontend`,
             form,
             {
               headers: token ? { "Authorization": `Bearer ${token}` } : {},

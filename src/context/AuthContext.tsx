@@ -1,9 +1,6 @@
 import React, { createContext, useState, useEffect } from "react";
-import axios from "axios";
 import { setTokens } from "../utils/tokenStore";
-import { setLogoutCallback } from "../utils/api";
-
-const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:4000";
+import { setLogoutCallback, apiClient } from "../utils/api";
 
 type AuthContextType = {
   token: string | null;
@@ -52,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // call backend to revoke refresh token
     const rt = localStorage.getItem("refreshToken");
     if (rt) {
-      axios.post(`${API_ROOT}/api/users/logout`, {
+      apiClient.post(`/api/users/logout`, {
         refreshToken: rt,
       }).catch(() => {});
     }
@@ -71,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const rt = localStorage.getItem("refreshToken");
     if (!rt) throw new Error("No refresh token");
 
-    const res = await axios.post(`${API_ROOT}/api/users/refresh-token`, {
+    const res = await apiClient.post(`/api/users/refresh-token`, {
       refreshToken: rt,
     });
     const data = res.data;
