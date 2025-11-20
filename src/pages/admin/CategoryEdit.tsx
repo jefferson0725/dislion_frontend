@@ -30,7 +30,7 @@ const CategoryEdit: React.FC = () => {
   const loadCategories = async () => {
     setError(null);
     try {
-      const res = await axios.get('/data.json');
+      const res = await axios.get('/api/export');
       const data = res.data;
       setCategories(data.categories || []);
     } catch (err: any) {

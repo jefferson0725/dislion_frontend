@@ -13,7 +13,7 @@ const WhatsAppButton = () => {
     // Load WhatsApp number from data.json
     const loadWhatsApp = async () => {
       try {
-        const res = await axios.get('/data.json');
+        const res = await axios.get('/api/export');
         const data = res.data;
         const number = data.settings?.whatsapp_number || '573007571199'; // Número por defecto
         setWhatsappNumber(number);

@@ -31,7 +31,7 @@ const ProductCreate: React.FC = () => {
     // load categories from local data.json
     (async () => {
       try {
-        const res = await axios.get('/data.json');
+        const res = await axios.get('/api/export');
         const data = res.data;
         setCategories(data.categories || []);
       } catch (err: any) {

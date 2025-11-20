@@ -157,7 +157,7 @@ const ProductEdit: React.FC = () => {
 
   const loadCategories = async () => {
     try {
-      const res = await axios.get('/data.json');
+      const res = await axios.get('/api/export');
       const data = res.data;
       setCategories(data.categories || []);
     } catch (err: any) {
