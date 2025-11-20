@@ -1,0 +1,78 @@
+{
+  "lastUpdated": "2025-11-20T00:55:22.090Z",
+  "settings": {
+    "whatsapp_number": null,
+    "contact_email": "dislion@gmail.com",
+    "contact_phone": "+57 323 341 4968",
+    "contact_address": "Calle 123 #45-67, Bogotá, Colombia",
+    "show_prices": "false",
+    "show_address": "false"
+  },
+  "categories": [
+    {
+      "id": 1,
+      "name": "prueba2",
+      "description": ""
+    },
+    {
+      "id": 2,
+      "name": "preuba3",
+      "description": ""
+    },
+    {
+      "id": 3,
+      "name": "prubaa4",
+      "description": ""
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "name": "p1",
+      "description": "",
+      "price": "0.00",
+      "image": null,
+      "category": {
+        "id": 1,
+        "name": "prueba2"
+      },
+      "categoryId": 1
+    },
+    {
+      "id": 2,
+      "name": "p2",
+      "description": "",
+      "price": "1000.00",
+      "image": null,
+      "category": {
+        "id": 1,
+        "name": "prueba2"
+      },
+      "categoryId": 1
+    },
+    {
+      "id": 3,
+      "name": "p33",
+      "description": "",
+      "price": "1000.00",
+      "image": null,
+      "category": {
+        "id": 1,
+        "name": "prueba2"
+      },
+      "categoryId": 1
+    },
+    {
+      "id": 4,
+      "name": "p6",
+      "description": "",
+      "price": "10000.00",
+      "image": null,
+      "category": {
+        "id": 1,
+        "name": "prueba2"
+      },
+      "categoryId": 1
+    }
+  ]
+}

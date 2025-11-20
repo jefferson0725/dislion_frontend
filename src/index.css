@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Typography */
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+    
+    /* New color palette: Navy #11224E, Orange #F87B1B, White #FFFFFF */
+    --background: 0 0% 100%; /* white */
+    --foreground: 223 64% 19%; /* #11224E navy */
+
+    --card: 0 0% 100%;
+    --card-foreground: 223 64% 19%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 223 64% 19%;
+
+    --primary: 223 64% 19%; /* #11224E navy for buttons */
+    --primary-foreground: 0 0% 100%; /* white text */
+
+    --secondary: 24 96% 54%; /* #F87B1B orange */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 223 20% 95%;
+    --muted-foreground: 223 30% 40%;
+
+    --accent: 24 96% 54%; /* #F87B1B orange */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 223 20% 90%;
+    --input: 223 20% 90%;
+    --ring: 223 64% 19%;
+
+    --radius: 0.75rem;
+
+    --gradient-hero: linear-gradient(135deg, hsl(223 64% 19%) 0%, hsl(24 96% 54%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(223 10% 98%) 100%);
+    --shadow-card: 0 10px 30px -10px hsl(223 64% 19% / 0.1);
+    --shadow-hover: 0 20px 40px -10px hsl(223 64% 19% / 0.15);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark {
+    --background: 223 64% 12%; /* dark navy */
+    --foreground: 0 0% 98%;
+
+    --card: 223 50% 16%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 223 50% 16%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 24 96% 54%; /* orange for dark mode */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 223 64% 25%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 223 40% 20%;
+    --muted-foreground: 223 15% 70%;
+
+    --accent: 24 96% 54%; /* orange */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 223 40% 25%;
+    --input: 223 40% 25%;
+    --ring: 24 96% 54%;
+
+    --gradient-hero: linear-gradient(135deg, hsl(223 64% 15%) 0%, hsl(24 96% 45%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(223 50% 16%) 0%, hsl(223 45% 18%) 100%);
+    --shadow-card: 0 10px 30px -10px hsl(0, 0%, 0% / 0.3);
+    --shadow-hover: 0 20px 40px -10px hsl(0, 0%, 0% / 0.4);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    font-feature-settings: 'liga' 1, 'calt' 1; /* Enable ligatures and contextual alternates */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    line-height: 1.2;
+  }
+
+  h2 {
+    font-size: 2rem;
+    line-height: 1.3;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    line-height: 1.4;
+  }
+
+  p {
+    line-height: 1.7;
+  }
+}
