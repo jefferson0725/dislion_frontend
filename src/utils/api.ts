@@ -1,13 +1,7 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { getToken, getRefreshToken, setTokens, clearTokens } from "./tokenStore";
 
-// Normalize API_ROOT: if VITE_API_URL is '/api' or empty, use empty string (same-origin);
-// otherwise use it as-is (should be a full base URL like 'https://dislion.com')
-const rawApiUrl = (import.meta.env.VITE_API_URL || "").trim();
-const API_ROOT = 
-  !rawApiUrl || rawApiUrl === "/api" 
-    ? "" 
-    : rawApiUrl.replace(/\/$/, ""); // remove trailing slash if present
+const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 // Variable para almacenar callback de logout
 let logoutCallback: (() => void) | null = null;
@@ -17,10 +11,8 @@ export function setLogoutCallback(callback: () => void) {
 }
 
 // Create axios instance with defaults
-// If API_ROOT is empty, baseURL is undefined so requests go to same-origin (/api/...)
-// If API_ROOT has a value, requests will be absolute (baseURL + path)
 const apiClient = axios.create({
-  baseURL: API_ROOT || undefined,
+  baseURL: API_ROOT,
   headers: {
     "Content-Type": "application/json",
   },
@@ -58,7 +50,7 @@ apiClient.interceptors.response.use(
         }
 
         // Refresh the token
-        const res = await apiClient.post(`/api/users/refresh-token`, {
+        const res = await axios.post(`${API_ROOT}/api/users/refresh-token`, {
           refreshToken: rt,
         });
 

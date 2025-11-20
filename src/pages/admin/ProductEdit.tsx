@@ -41,7 +41,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import apiFetch, { apiClient } from "../../utils/api";
+import apiFetch from "../../utils/api";
 import { getToken } from "../../utils/tokenStore";
 import { toast } from "../../hooks/use-toast";
 import ProtectedRoute from "../../components/ProtectedRoute";
@@ -282,6 +282,7 @@ const ProductEdit: React.FC = () => {
       if (imageFile) {
         setUploadingImage(true);
         setUploadProgress(0);
+        const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:4000";
         const token = getToken();
         const t = toast({ title: "Guardando imagen", description: `0%` });
 
@@ -298,8 +299,8 @@ const ProductEdit: React.FC = () => {
           form.append("image", imageFile);
           form.append("filename", filename);
 
-          const uploadRes = await apiClient.post(
-            `/api/uploads/frontend`,
+          const uploadRes = await axios.post(
+            `${API_ROOT}/api/uploads/frontend`,
             form,
             {
               headers: token ? { "Authorization": `Bearer ${token}` } : {},
