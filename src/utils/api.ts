@@ -1,7 +1,10 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { getToken, getRefreshToken, setTokens, clearTokens } from "./tokenStore";
 
-const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:4000";
+// If VITE_API_URL is /api or empty, use empty string (same-origin relative requests)
+// Otherwise use it as baseURL
+const VITE_API = import.meta.env.VITE_API_URL || "";
+const API_ROOT = (VITE_API === "/api" || VITE_API === "") ? "" : VITE_API;
 
 // Variable para almacenar callback de logout
 let logoutCallback: (() => void) | null = null;
@@ -50,7 +53,7 @@ apiClient.interceptors.response.use(
         }
 
         // Refresh the token
-        const res = await axios.post(`${API_ROOT}/users/refresh-token`, {
+        const res = await axios.post(`${API_ROOT}/api/users/refresh-token`, {
           refreshToken: rt,
         });
 
