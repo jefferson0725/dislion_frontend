@@ -9,78 +9,78 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Typography */
-    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-    --font-display: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
     
-    /* New color palette: Navy #11224E, Orange #F87B1B, White #FFFFFF */
+    /* Color palette: Penn Blue #0A1045, Coquelicot #FF4000, White #FFFFFF */
     --background: 0 0% 100%; /* white */
-    --foreground: 223 64% 19%; /* #11224E navy */
+    --foreground: 231 75% 16%; /* #0A1045 Penn Blue */
 
     --card: 0 0% 100%;
-    --card-foreground: 223 64% 19%;
+    --card-foreground: 231 75% 16%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 223 64% 19%;
+    --popover-foreground: 231 75% 16%;
 
-    --primary: 223 64% 19%; /* #11224E navy for buttons */
+    --primary: 231 75% 16%; /* #0A1045 Penn Blue for buttons */
     --primary-foreground: 0 0% 100%; /* white text */
 
-    --secondary: 24 96% 54%; /* #F87B1B orange */
+    --secondary: 15 100% 50%; /* #FF4000 Coquelicot */
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 223 20% 95%;
-    --muted-foreground: 223 30% 40%;
+    --muted: 231 20% 96%;
+    --muted-foreground: 231 30% 45%;
 
-    --accent: 24 96% 54%; /* #F87B1B orange */
+    --accent: 15 100% 50%; /* #FF4000 Coquelicot */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 223 20% 90%;
-    --input: 223 20% 90%;
-    --ring: 223 64% 19%;
+    --border: 231 15% 90%;
+    --input: 231 15% 90%;
+    --ring: 15 100% 50%; /* Coquelicot for focus rings */
 
     --radius: 0.75rem;
 
-    --gradient-hero: linear-gradient(135deg, hsl(223 64% 19%) 0%, hsl(24 96% 54%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(223 10% 98%) 100%);
-    --shadow-card: 0 10px 30px -10px hsl(223 64% 19% / 0.1);
-    --shadow-hover: 0 20px 40px -10px hsl(223 64% 19% / 0.15);
+    --gradient-hero: linear-gradient(135deg, hsl(231 75% 16%) 0%, hsl(15 100% 50%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(231 10% 98%) 100%);
+    --shadow-card: 0 10px 30px -10px hsl(231 75% 16% / 0.1);
+    --shadow-hover: 0 20px 40px -10px hsl(231 75% 16% / 0.15);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    --background: 223 64% 12%; /* dark navy */
+    --background: 231 75% 8%; /* dark Penn Blue */
     --foreground: 0 0% 98%;
 
-    --card: 223 50% 16%;
+    --card: 231 60% 12%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 223 50% 16%;
+    --popover: 231 60% 12%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 24 96% 54%; /* orange for dark mode */
+    --primary: 15 100% 50%; /* Coquelicot for dark mode */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 223 64% 25%;
+    --secondary: 231 75% 25%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 223 40% 20%;
-    --muted-foreground: 223 15% 70%;
+    --muted: 231 40% 18%;
+    --muted-foreground: 231 15% 65%;
 
-    --accent: 24 96% 54%; /* orange */
+    --accent: 15 100% 50%; /* Coquelicot */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 223 40% 25%;
-    --input: 223 40% 25%;
-    --ring: 24 96% 54%;
+    --border: 231 40% 22%;
+    --input: 231 40% 22%;
+    --ring: 15 100% 50%;
 
-    --gradient-hero: linear-gradient(135deg, hsl(223 64% 15%) 0%, hsl(24 96% 45%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(223 50% 16%) 0%, hsl(223 45% 18%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(231 75% 12%) 0%, hsl(15 100% 45%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(231 60% 12%) 0%, hsl(231 55% 14%) 100%);
     --shadow-card: 0 10px 30px -10px hsl(0, 0%, 0% / 0.3);
     --shadow-hover: 0 20px 40px -10px hsl(0, 0%, 0% / 0.4);
   }

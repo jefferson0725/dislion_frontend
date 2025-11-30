@@ -30,9 +30,10 @@ const CategoryEdit: React.FC = () => {
   const loadCategories = async () => {
     setError(null);
     try {
-      const res = await axios.get('/api/export');
-      const data = res.data;
-      setCategories(data.categories || []);
+      const res = await apiFetch('/api/categories');
+      if (!res.ok) throw new Error('Error loading categories');
+      const data = await res.json();
+      setCategories(data || []);
     } catch (err: any) {
       setError(err.message || "Error");
     }
@@ -86,7 +87,7 @@ const CategoryEdit: React.FC = () => {
   return (
     <ProtectedRoute>
       <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
+        <div className="mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
             Editar Categorías
           </h2>
@@ -101,15 +102,16 @@ const CategoryEdit: React.FC = () => {
         )}
 
         {categories.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+          <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 animate-in fade-in">
             <p className="text-gray-500 text-lg">No hay categorías para editar</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {categories.map((c) => (
+            {categories.map((c, index) => (
               <div
                 key={c.id}
-                className="bg-white border-2 border-gray-100 rounded-xl p-4 sm:p-6 hover:border-orange-200 hover:shadow-md transition-all"
+                className="bg-white border-2 border-gray-100 rounded-xl p-4 sm:p-6 hover:border-orange-200 hover:shadow-md transition-all duration-300 hover:scale-[1.01] animate-in fade-in slide-in-from-left-4"
+                style={{ animationDelay: `${index * 50}ms` }}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">

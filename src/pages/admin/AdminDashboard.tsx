@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Download, CheckCircle, Save, Package, FolderOpen, Settings, LogOut, Edit, PlusCircle, Lock } from "lucide-react";
+import { Download, CheckCircle, Save, Package, FolderOpen, Settings, LogOut, Edit, PlusCircle, Lock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -12,7 +12,8 @@ import { apiFetch } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
-import heroBanner from "@/assets/logo.webp";
+import heroBanner from "@/assets/logo.png";
+import { motion, AnimatePresence } from "framer-motion";
 
 const AdminDashboard: React.FC = () => {
   const [tab, setTab] = useState(4); // Iniciar en configuración
@@ -433,14 +434,9 @@ const AdminDashboard: React.FC = () => {
   };
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
 
   const handleCloseSidebar = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      setSidebarOpen(false);
-      setIsClosing(false);
-    }, 300);
+    setSidebarOpen(false);
   };
 
   const menuItems = [
@@ -455,14 +451,22 @@ const AdminDashboard: React.FC = () => {
   const currentMenuItem = menuItems.find(item => item.id === tab);
 
   return (
-    <div 
+    <motion.div 
       className="min-h-screen flex"
       style={{ 
         background: 'linear-gradient(135deg, #FFFFFF 0%, #FFE5D0 50%, #FFC299 100%)'
       }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
     >
       {/* Sidebar - Desktop */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-72 bg-white border-r border-gray-200 shadow-lg h-screen sticky top-0">
+      <motion.aside 
+        className="hidden lg:flex lg:flex-col lg:w-72 bg-white border-r border-gray-200 shadow-lg h-screen sticky top-0"
+        initial={{ x: -280 }}
+        animate={{ x: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
         {/* Logo */}
         <div className="p-6 border-b border-gray-200 flex-shrink-0">
           <img 
@@ -524,23 +528,41 @@ const AdminDashboard: React.FC = () => {
             Cerrar Sesión
           </Button>
         </div>
-      </aside>
+      </motion.aside>
 
       {/* Sidebar - Mobile */}
-      {(sidebarOpen || isClosing) && (
-        <>
-          {/* Backdrop */}
-          <div 
-            className={`lg:hidden fixed inset-0 bg-black z-40 transition-opacity duration-300 ${
-              isClosing ? 'opacity-0' : 'opacity-50'
-            }`}
-            onClick={handleCloseSidebar}
-          />
-          
-          {/* Sidebar Drawer */}
-          <aside className={`lg:hidden fixed inset-y-0 left-0 w-72 bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out ${
-            isClosing ? '-translate-x-full' : 'translate-x-0'
-          }`}>
+      <AnimatePresence>
+        {sidebarOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div 
+              className="lg:hidden fixed inset-0 bg-black z-40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              onClick={handleCloseSidebar}
+            />
+            
+            {/* Sidebar Drawer */}
+            <motion.aside 
+              className="lg:hidden fixed inset-y-0 left-0 w-72 bg-white shadow-2xl z-50 flex flex-col"
+              initial={{ x: -280 }}
+              animate={{ x: 0 }}
+              exit={{ x: -280 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+            {/* Close Button */}
+            <div className="absolute top-4 right-4 z-10">
+              <button
+                onClick={handleCloseSidebar}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                aria-label="Cerrar menú"
+              >
+                <X className="w-6 h-6 text-gray-600" />
+              </button>
+            </div>
+
             {/* Logo */}
             <div className="p-6 border-b border-gray-200">
               <img 
@@ -605,9 +627,10 @@ const AdminDashboard: React.FC = () => {
                 Cerrar Sesión
               </Button>
             </div>
-          </aside>
+          </motion.aside>
         </>
-      )}
+        )}
+      </AnimatePresence>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen">
@@ -657,22 +680,31 @@ const AdminDashboard: React.FC = () => {
 
           {/* Content Area */}
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-            <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 lg:p-10">
+            <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 lg:p-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
               {tab === 0 && <CategoryCreate />}
               {tab === 1 && <CategoryEdit />}
               {tab === 2 && <ProductCreate />}
               {tab === 3 && <ProductEdit />}
               {tab === 4 && (
-                <div className="space-y-6">
-                  <div>
+                <motion.div 
+                  className="space-y-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                  >
                     <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
                       Configuración General
                     </h2>
                     <p className="text-gray-600">Configura opciones del catálogo y contacto</p>
-                  </div>
+                  </motion.div>
 
                   {/* Mostrar Precios */}
-                  <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-6 rounded-xl border-2 border-orange-100">
+                  <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-6 rounded-xl border-2 border-orange-100 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-75 hover:shadow-lg transition-all">
                     <div className="flex items-center justify-between mb-2">
                       <label className="block text-sm font-semibold text-gray-700">
                         Mostrar Precios en Catálogo
@@ -994,33 +1026,61 @@ const AdminDashboard: React.FC = () => {
                       )}
                     </Button>
                   </div>
-                </div>
+                </motion.div>
               )}
               {tab === 5 && (
-                <div className="space-y-6">
-                  <div>
+                <motion.div 
+                  className="space-y-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                  >
                     <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
                       Cambiar Contraseña
                     </h2>
                     <p className="text-gray-600">Actualiza la contraseña de tu cuenta de administrador</p>
-                  </div>
+                  </motion.div>
 
                   {passwordSuccess && (
-                    <Alert className="bg-green-50 border-green-200 animate-in slide-in-from-top-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      <AlertDescription className="text-green-800">
-                        ¡Contraseña actualizada exitosamente!
-                      </AlertDescription>
-                    </Alert>
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Alert className="bg-green-50 border-green-200">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <AlertDescription className="text-green-800">
+                          ¡Contraseña actualizada exitosamente!
+                        </AlertDescription>
+                      </Alert>
+                    </motion.div>
                   )}
 
                   {passwordError && (
-                    <Alert variant="destructive" className="animate-in slide-in-from-top-2">
-                      <AlertDescription>{passwordError}</AlertDescription>
-                    </Alert>
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Alert variant="destructive">
+                        <AlertDescription>{passwordError}</AlertDescription>
+                      </Alert>
+                    </motion.div>
                   )}
 
-                  <div className="bg-gradient-to-br from-orange-50 to-white p-6 rounded-xl border-2 border-orange-100 space-y-4">
+                  <motion.div 
+                    className="bg-gradient-to-br from-orange-50 to-white p-6 rounded-xl border-2 border-orange-100 space-y-4"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                  >
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Contraseña Actual
@@ -1062,32 +1122,38 @@ const AdminDashboard: React.FC = () => {
                         className="h-12 text-base border-2"
                       />
                     </div>
-                  </div>
+                  </motion.div>
 
-                  <Button
-                    onClick={handleChangePassword}
-                    disabled={passwordLoading}
-                    className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-secondary to-orange-500 hover:from-orange-500 hover:to-secondary transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
                   >
-                    {passwordLoading ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Cambiando...
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Lock className="w-5 h-5" />
-                        Cambiar Contraseña
-                      </div>
-                    )}
-                  </Button>
-                </div>
+                    <Button
+                      onClick={handleChangePassword}
+                      disabled={passwordLoading}
+                      className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-secondary to-orange-500 hover:from-orange-500 hover:to-secondary transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                    >
+                      {passwordLoading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Cambiando...
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Lock className="w-5 h-5" />
+                          Cambiar Contraseña
+                        </div>
+                      )}
+                    </Button>
+                  </motion.div>
+                </motion.div>
               )}
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

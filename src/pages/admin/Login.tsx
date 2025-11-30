@@ -6,13 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import apiFetch from "../../utils/api";
-import heroBanner from "@/assets/logo.webp";
+import heroBanner from "@/assets/logo.png";
+import { motion } from "framer-motion";
 
 const Login: React.FC = () => {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const auth = useContext(AuthContext)!;
   const navigate = useNavigate();
 
@@ -29,11 +31,18 @@ const Login: React.FC = () => {
       if (!res.ok) throw new Error(data.error || "Login failed");
 
       auth.login(data.token, data.refreshToken, data.user);
-      if (data.user && data.user.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/products/create");
-      }
+      
+      // Start transition animation
+      setIsTransitioning(true);
+      
+      // Wait for animation before navigating
+      setTimeout(() => {
+        if (data.user && data.user.role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/products/create");
+        }
+      }, 800);
     } catch (err: any) {
       setError(err.message || "Error al iniciar sesión");
     } finally {
@@ -42,11 +51,14 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div 
+    <motion.div 
       className="min-h-screen flex items-center justify-center px-4 py-12"
       style={{ 
         background: 'linear-gradient(135deg, #FFFFFF 0%, #FFE5D0 50%, #FFC299 100%)'
       }}
+      initial={{ opacity: 1 }}
+      animate={{ opacity: isTransitioning ? 0 : 1 }}
+      transition={{ duration: 0.5 }}
     >
       <div className="w-full max-w-md">
         {/* Logo */}
@@ -57,14 +69,32 @@ const Login: React.FC = () => {
             className="h-24 mx-auto object-contain mb-4"
             style={{ mixBlendMode: 'multiply' }}
           />
-          <h1 className="text-3xl font-bold text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
+          <motion.h1 
+            className="text-3xl font-bold text-gray-800" 
+            style={{ fontFamily: 'Poppins, sans-serif' }}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
             Panel de Administración
-          </h1>
-          <p className="text-gray-600 mt-2">Ingresa tus credenciales para continuar</p>
+          </motion.h1>
+          <motion.p 
+            className="text-gray-600 mt-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            Ingresa tus credenciales para continuar
+          </motion.p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
+        <motion.div 
+          className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
           <form onSubmit={submit} className="space-y-6">
             {/* Username/Email Input */}
             <div className="space-y-2">
@@ -129,14 +159,19 @@ const Login: React.FC = () => {
               )}
             </Button>
           </form>
-        </div>
+        </motion.div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-gray-600 mt-6">
+        <motion.p 
+          className="text-center text-sm text-gray-600 mt-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+        >
           © 2025 DISLION - Todos los derechos reservados
-        </p>
+        </motion.p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

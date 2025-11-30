@@ -1,17 +1,32 @@
 import React, { createContext, useState, useEffect } from "react";
 
+interface WishlistItem {
+  id: number;
+  image: string;
+  name: string;
+  price: number;
+  category: string;
+  selectedSize?: {
+    id: number;
+    size: string;
+    price: number;
+    image: string | null;
+  } | null;
+  uniqueKey: string; // productId o productId-sizeId
+}
+
 interface WishlistContextType {
-  wishlist: any[];
-  addToWishlist: (product: any) => void;
-  removeFromWishlist: (productId: number) => void;
-  isInWishlist: (productId: number) => boolean;
+  wishlist: WishlistItem[];
+  addToWishlist: (product: WishlistItem) => void;
+  removeFromWishlist: (uniqueKey: string) => void;
+  isInWishlist: (uniqueKey: string) => boolean;
   clearWishlist: () => void;
 }
 
 export const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
 export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [wishlist, setWishlist] = useState<any[]>([]);
+  const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
 
   // Load wishlist from localStorage on mount
   useEffect(() => {
@@ -34,20 +49,20 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [wishlist]);
 
-  const addToWishlist = (product: any) => {
+  const addToWishlist = (product: WishlistItem) => {
     setWishlist((prev) => {
-      const exists = prev.find((p) => p.id === product.id);
+      const exists = prev.find((p) => p.uniqueKey === product.uniqueKey);
       if (exists) return prev;
       return [...prev, product];
     });
   };
 
-  const removeFromWishlist = (productId: number) => {
-    setWishlist((prev) => prev.filter((p) => p.id !== productId));
+  const removeFromWishlist = (uniqueKey: string) => {
+    setWishlist((prev) => prev.filter((p) => p.uniqueKey !== uniqueKey));
   };
 
-  const isInWishlist = (productId: number) => {
-    return wishlist.some((p) => p.id === productId);
+  const isInWishlist = (uniqueKey: string) => {
+    return wishlist.some((p) => p.uniqueKey === uniqueKey);
   };
 
   const clearWishlist = () => {

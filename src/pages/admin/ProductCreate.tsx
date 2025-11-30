@@ -1,17 +1,27 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
-import { Package, X, CheckCircle, AlertCircle, Image as ImageIcon } from "lucide-react";
+import { Package, X, CheckCircle, AlertCircle, Image as ImageIcon, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
 import apiFetch from "../../utils/api";
 import { getToken } from "../../utils/tokenStore";
 import { toast } from "../../hooks/use-toast";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import { AuthContext } from "../../context/AuthContext";
+
+interface ProductSize {
+  id?: number;
+  size: string;
+  price: number | "";
+  image: string | null;
+  imageFile?: File | null;
+  imagePreview?: string | null;
+}
 
 const ProductCreate: React.FC = () => {
   const auth = useContext(AuthContext)!;
@@ -26,19 +36,107 @@ const ProductCreate: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  
+  // Product sizes state
+  const [hasSizes, setHasSizes] = useState(false);
+  const [sizes, setSizes] = useState<ProductSize[]>([]);
+  const [productId, setProductId] = useState<number | null>(null);
 
   useEffect(() => {
-    // load categories from local data.json
+    // load categories from API
     (async () => {
       try {
-        const res = await axios.get('/api/export');
-        const data = res.data;
-        setCategories(data.categories || []);
+        const res = await apiFetch('/api/categories');
+        if (!res.ok) throw new Error('Error loading categories');
+        const data = await res.json();
+        setCategories(data || []);
       } catch (err: any) {
         setError(err.message || "Error cargando categorias");
       }
     })();
   }, []);
+
+  const addSize = () => {
+    setSizes([...sizes, { size: "", price: "", image: null, imageFile: null, imagePreview: null }]);
+  };
+
+  const removeSize = (index: number) => {
+    setSizes(sizes.filter((_, i) => i !== index));
+  };
+
+  const updateSize = (index: number, field: keyof ProductSize, value: any) => {
+    const newSizes = [...sizes];
+    newSizes[index] = { ...newSizes[index], [field]: value };
+    setSizes(newSizes);
+  };
+
+  const handleSizeImageChange = (index: number, file: File | null) => {
+    if (file) {
+      const preview = URL.createObjectURL(file);
+      updateSize(index, "imageFile", file);
+      updateSize(index, "imagePreview", preview);
+    }
+  };
+
+  const uploadSizeImage = async (sizeIndex: number, productId: number) => {
+    const size = sizes[sizeIndex];
+    if (!size.imageFile) return null;
+
+    try {
+      const ext = size.imageFile.name.split('.').pop() || 'jpg';
+      const sanitizedSize = size.size.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 30);
+      const filename = `${productId}-size-${sanitizedSize}.${ext}`;
+
+      const form = new FormData();
+      form.append("filename", filename);
+      form.append("image", size.imageFile);
+
+      const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:4000";
+      const token = getToken();
+      const uploadRes = await axios.post(
+        `${API_ROOT}/api/uploads/frontend`,
+        form,
+        {
+          headers: token ? { "Authorization": `Bearer ${token}` } : {},
+        }
+      );
+
+      return uploadRes.data.filename || filename;
+    } catch (err: any) {
+      console.error("Error uploading size image:", err);
+      throw err;
+    }
+  };
+
+  const createProductSizes = async (productId: number) => {
+    for (let i = 0; i < sizes.length; i++) {
+      const size = sizes[i];
+
+      if (!size.size || size.price === "") {
+        throw new Error(`Tamaño ${i + 1}: Completa el nombre y precio`);
+      }
+
+      let imageFilename = null;
+      if (size.imageFile) {
+        imageFilename = await uploadSizeImage(i, productId);
+      }
+
+      const res = await apiFetch(`/api/product-sizes`, {
+        method: "POST",
+        body: JSON.stringify({
+          productId,
+          size: size.size.trim(),
+          price: Number(size.price),
+          image: imageFilename,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || `Error creando tamaño ${i + 1}`);
+      }
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +159,8 @@ const ProductCreate: React.FC = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error creando producto");
 
+      setProductId(data.id);
+
       // If there's an image file selected, upload it with product ID and name
       if (imageFile && data.id) {
         const ext = imageFile.name.split('.').pop() || 'jpg';
@@ -80,11 +180,11 @@ const ProductCreate: React.FC = () => {
           const token = getToken();
           
           const form = new FormData();
-          form.append("image", imageFile);
           form.append("filename", filename);
+          form.append("image", imageFile);
 
           const uploadRes = await axios.post(
-            "/api/uploads/frontend",
+            `${API_ROOT}/api/uploads/frontend`,
             form,
             {
               headers: token ? { "Authorization": `Bearer ${token}` } : {},
@@ -120,6 +220,11 @@ const ProductCreate: React.FC = () => {
         }
       }
 
+      // Create product sizes if enabled
+      if (hasSizes && sizes.length > 0) {
+        await createProductSizes(data.id);
+      }
+
       toast({ title: "Producto creado", description: data.name || "El producto ha sido creado exitosamente" });
       setName("");
       setDescription("");
@@ -127,6 +232,9 @@ const ProductCreate: React.FC = () => {
       setCategoryId("");
       setImageFile(null);
       setImagePreview(null);
+      setHasSizes(false);
+      setSizes([]);
+      setProductId(null);
     } catch (err: any) {
       setError(err.message || "Error");
       toast({ title: "Error", description: err.message || "Error al crear producto", variant: "destructive" });
@@ -149,14 +257,14 @@ const ProductCreate: React.FC = () => {
   return (
     <ProtectedRoute>
       <div className="max-w-2xl mx-auto">
-        <div className="mb-6">
+        <div className="mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
             Crear Producto
           </h2>
           <p className="text-gray-600 mt-1">Agrega un nuevo producto a tu catálogo</p>
         </div>
 
-        <form onSubmit={submit} className="space-y-6">
+        <form onSubmit={submit} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {error && (
             <Alert variant="destructive" className="animate-in slide-in-from-top-2">
               <AlertCircle className="h-4 w-4" />
@@ -164,7 +272,7 @@ const ProductCreate: React.FC = () => {
             </Alert>
           )}
 
-          <div className="space-y-2">
+          <div className="space-y-2 animate-in fade-in slide-in-from-left-2 duration-500 delay-75">
             <label className="text-sm font-semibold text-gray-700">Nombre del Producto *</label>
             <Input
               type="text"
@@ -282,6 +390,123 @@ const ProductCreate: React.FC = () => {
               <Progress value={uploadProgress} className="h-2" />
             </div>
           )}
+
+          {/* Product Sizes Section */}
+          <div className="border-t-2 pt-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Checkbox
+                id="has-sizes"
+                checked={hasSizes}
+                onCheckedChange={(checked) => setHasSizes(checked as boolean)}
+              />
+              <label htmlFor="has-sizes" className="text-sm font-semibold text-gray-700 cursor-pointer">
+                Este producto tiene diferentes tamaños
+              </label>
+            </div>
+
+            {hasSizes && (
+              <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  Agrega los tamaños/presentaciones disponibles para este producto (ej: x100 unidades, 1 litro, etc.)
+                </p>
+
+                {sizes.map((size, index) => (
+                  <div key={index} className="bg-white p-4 rounded-lg border border-gray-200 space-y-3">
+                    <div className="flex justify-between items-center mb-3">
+                      <h4 className="font-semibold text-gray-800">Tamaño {index + 1}</h4>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => removeSize(index)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Eliminar
+                      </Button>
+                    </div>
+
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-semibold text-gray-700 mb-1 block">Tamaño *</label>
+                        <Input
+                          type="text"
+                          placeholder="Ej: S, M, L, XL"
+                          value={size.size}
+                          onChange={(e) => updateSize(index, "size", e.target.value)}
+                          className="h-10 text-sm border-2"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-gray-700 mb-1 block">Precio *</label>
+                        <div className="relative">
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
+                          <Input
+                            type="number"
+                            placeholder="0"
+                            value={size.price}
+                            onChange={(e) => updateSize(index, "price", e.target.value === "" ? "" : Number(e.target.value))}
+                            min="0"
+                            step="1000"
+                            className="h-10 text-sm border-2 pl-6"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-gray-700 mb-1 block">Imagen para este tamaño</label>
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-orange-400 transition-colors">
+                        {size.imagePreview ? (
+                          <div className="relative">
+                            <img 
+                              src={size.imagePreview} 
+                              alt="size preview" 
+                              className="w-full max-h-40 object-contain rounded mb-2"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => {
+                                updateSize(index, "imageFile", null);
+                                updateSize(index, "imagePreview", null);
+                                updateSize(index, "image", null);
+                              }}
+                              className="absolute top-1 right-1"
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-500 text-center">Selecciona una imagen</p>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const f = e.target.files && e.target.files[0];
+                            if (f) handleSizeImageChange(index, f);
+                          }}
+                          className="w-full text-xs text-gray-600 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-secondary"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <Button
+                  type="button"
+                  onClick={addSize}
+                  variant="outline"
+                  className="w-full border-2 border-dashed"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Añadir otro tamaño
+                </Button>
+              </div>
+            )}
+          </div>
 
           <Button
             type="submit"

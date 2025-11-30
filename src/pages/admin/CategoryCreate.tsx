@@ -45,14 +45,14 @@ const CategoryCreate: React.FC = () => {
   return (
     <AdminRoute>
       <div className="max-w-2xl mx-auto">
-        <div className="mb-6">
+        <div className="mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
             Crear Categoría
           </h2>
           <p className="text-gray-600 mt-1">Agrega una nueva categoría para organizar tus productos</p>
         </div>
 
-        <form onSubmit={submit} className="space-y-6">
+        <form onSubmit={submit} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {error && (
             <Alert variant="destructive" className="animate-in slide-in-from-top-2">
               <AlertCircle className="h-4 w-4" />

@@ -29,16 +29,13 @@ const Footer = () => {
   }, []);
 
   return (
-    <footer 
-      className="mt-auto py-8 border-t"
-      style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #FFE5D0 50%, #FFC299 100%)' }}
-    >
+    <footer className="mt-auto py-8 border-t-0 bg-[#0A1045]">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12">
           {/* Dirección */}
           {showAddress && (
-            <div className="flex items-center gap-2 text-gray-800">
-              <div className="p-2 bg-white/70 rounded-full">
+            <div className="flex items-center gap-2 text-white">
+              <div className="p-2 bg-white/10 rounded-full">
                 <MapPin className="w-5 h-5" />
               </div>
               <span className="font-medium">{contactAddress}</span>
@@ -48,9 +45,9 @@ const Footer = () => {
           {/* Teléfono */}
           <a 
             href={`tel:${contactPhone.replace(/\s/g, '')}`}
-            className="flex items-center gap-2 text-gray-800 hover:text-secondary transition-colors group"
+            className="flex items-center gap-2 text-white hover:text-[#FF4000] transition-colors group"
           >
-            <div className="p-2 bg-white/70 rounded-full group-hover:bg-white transition-colors">
+            <div className="p-2 bg-white/10 rounded-full group-hover:bg-white/20 transition-colors">
               <Phone className="w-5 h-5" />
             </div>
             <span className="font-medium">{contactPhone}</span>
@@ -59,9 +56,9 @@ const Footer = () => {
           {/* Email */}
           <a 
             href={`mailto:${contactEmail}`}
-            className="flex items-center gap-2 text-gray-800 hover:text-secondary transition-colors group"
+            className="flex items-center gap-2 text-white hover:text-[#FF4000] transition-colors group"
           >
-            <div className="p-2 bg-white/70 rounded-full group-hover:bg-white transition-colors">
+            <div className="p-2 bg-white/10 rounded-full group-hover:bg-white/20 transition-colors">
               <Mail className="w-5 h-5" />
             </div>
             <span className="font-medium">{contactEmail}</span>
@@ -69,7 +66,7 @@ const Footer = () => {
         </div>
 
         {/* Copyright */}
-        <div className="text-center mt-6 text-sm text-gray-600">
+        <div className="text-center mt-6 text-sm text-white/70">
           © {new Date().getFullYear()} DISLION. Todos los derechos reservados.
         </div>
       </div>

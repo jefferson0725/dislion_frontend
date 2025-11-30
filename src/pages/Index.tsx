@@ -2,14 +2,15 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Search, Menu, X, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import ProductCard from "@/components/ProductCard";
+import AnimatedProductCard from "@/components/AnimatedProductCard";
 import CategoryFilter from "@/components/CategoryFilter";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import WishlistDrawer from "@/components/WishlistDrawer";
 import Footer from "@/components/Footer";
 import { useWishlist } from "@/context/WishlistContext";
 import { useDataVersion } from "@/hooks/useDataVersion";
-import heroBanner from "@/assets/logo.webp";
+import heroBanner from "@/assets/logo.png";
+import { motion, AnimatePresence } from "framer-motion";
 
 // products will be loaded from local JSON file
 
@@ -105,7 +106,11 @@ const Index = () => {
         // Transform products to use local image paths
         const productsData = Array.isArray(data.products) ? data.products.map((p: any) => ({
           ...p,
-          image: p.image ? `/images/${p.image}` : null
+          image: p.image ? `/images/${p.image}` : null,
+          sizes: p.sizes ? p.sizes.map((s: any) => ({
+            ...s,
+            image: s.image ? `/images/${s.image}` : null
+          })) : []
         })) : [];
         
         setProducts(productsData);
@@ -134,9 +139,7 @@ const Index = () => {
       {/* Mobile-only hamburger button - always visible, aligned with navbar */}
       <button
         onClick={handleMenuToggle}
-        className={`md:hidden fixed ${
-          isScrolled ? 'top-6' : 'top-4'
-        } right-4 z-50 p-2 rounded-full shadow-lg transition-all ${
+        className={`md:hidden fixed top-4 right-4 z-50 p-2 rounded-full shadow-lg transition-all ${
           isMobileMenuOpen ? 'bg-secondary text-white hover:bg-secondary/90' : 'bg-white hover:bg-gray-100'
         }`}
       >
@@ -239,21 +242,15 @@ const Index = () => {
         </div>
       )}
 
-      {/* Sticky Navbar - appears on scroll */}
-      <nav 
-        className={`fixed top-0 left-0 right-0 z-40 shadow-md transition-all duration-300 ${
-          isScrolled ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
-        }`}
-        style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #FFE5D0 50%, #FFC299 100%)' }}
-      >
-        <div className="mx-auto max-w-7xl px-4 py-4 flex items-center justify-between">
+      {/* Navbar - always visible */}
+      <nav className="fixed top-0 left-0 right-0 z-40 shadow-md bg-[#0A1045]">
+        <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2">
             <img 
               src={heroBanner} 
               alt="DISLION" 
-              className="h-16 md:h-20 w-auto object-contain"
-              style={{ mixBlendMode: 'multiply' }}
+              className="h-12 md:h-14 w-auto object-contain"
             />
           </div>
 
@@ -261,11 +258,11 @@ const Index = () => {
           <div className="hidden md:flex items-center gap-4">
             {isSearchOpen ? (
               <div className="relative w-80">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
                 <Input
                   type="search"
                   placeholder="Buscar productos..."
-                  className="h-10 pl-10 pr-3 bg-white/80"
+                  className="h-10 pl-10 pr-3 bg-white"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   autoFocus
@@ -274,21 +271,21 @@ const Index = () => {
             ) : (
               <button
                 onClick={() => setIsSearchOpen(true)}
-                className="p-2 hover:bg-black/5 rounded-full transition-colors"
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
               >
-                <Search className="h-5 w-5" />
+                <Search className="h-5 w-5 text-white" />
               </button>
             )}
             
             {/* Wishlist button */}
             <button
               onClick={() => setIsWishlistOpen(true)}
-              className="relative p-2 hover:bg-black/5 rounded-full transition-all hover:scale-105 active:scale-95"
+              className="relative p-2 hover:bg-white/10 rounded-full transition-all hover:scale-105 active:scale-95"
               title="Lista de deseos"
             >
-              <Heart className={`h-5 w-5 ${wishlist.length > 0 ? 'fill-red-500 text-red-500' : ''}`} />
+              <Heart className={`h-5 w-5 ${wishlist.length > 0 ? 'fill-[#FF4000] text-[#FF4000]' : 'text-white'}`} />
               {wishlist.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-[#FF4000] text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                   {wishlist.length}
                 </span>
               )}
@@ -298,88 +295,61 @@ const Index = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative h-[500px] xl:h-[400px] overflow-hidden" style={{ 
-        background: 'linear-gradient(135deg, #FFFFFF 0%, #FFE5D0 50%, #FFC299 100%)'
-      }}>
-        {/* Logo positioning: top center when width < 1300px, left center when >= 1300px */}
-        <div
-          className="xl:hidden absolute inset-0"
-          style={{ 
-            backgroundImage: `url(${heroBanner})`,
-            backgroundPosition: 'center 20px',
-            backgroundSize: 'auto 180px',
-            backgroundRepeat: 'no-repeat',
-            mixBlendMode: 'multiply',
-            opacity: 0.95
-          }}
-        />
-        {/* Desktop logo on the left (only when width >= 1300px) */}
-        <div
-          className="hidden xl:block absolute inset-0"
-          style={{ 
-            backgroundImage: `url(${heroBanner})`,
-            backgroundPosition: 'left center',
-            backgroundSize: 'auto 280px',
-            backgroundRepeat: 'no-repeat',
-            mixBlendMode: 'multiply',
-            opacity: 0.95
-          }}
-        />
-        <div className="relative z-10 mx-auto flex h-full max-w-7xl flex-col items-center justify-end pb-12 px-4 text-center xl:justify-center xl:pb-0">
-          <h1 
-            className="mb-6 text-6xl font-bold md:text-7xl xl:text-6xl font-hero tracking-wider"
-            style={{
-              color: '#000000',
-              textShadow: '0 0 8px rgba(255, 255, 255, 0.9), 0 0 4px rgba(255, 255, 255, 0.8)',
-              WebkitFontSmoothing: 'antialiased',
-              MozOsxFontSmoothing: 'grayscale',
-              letterSpacing: '0.05em'
-            }}
+      <section className="relative pt-24 pb-12 md:pt-28 md:pb-16 overflow-hidden bg-[#0A1045]">
+        <motion.div 
+          className="relative z-10 mx-auto flex max-w-7xl flex-col items-center px-4 text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+        >
+          <motion.h1 
+            className="mb-4 text-3xl font-bold md:text-5xl font-hero tracking-wider text-white"
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
           >
-            TU SOLUCIÓN ESTRATÉGICA
-          </h1>
-          <p 
-            className="mb-8 text-xl font-medium xl:text-lg"
-            style={{
-              color: '#000000',
-              textShadow: '0 0 6px rgba(255, 255, 255, 0.9), 0 0 3px rgba(255, 255, 255, 0.8)',
-              WebkitFontSmoothing: 'antialiased',
-              MozOsxFontSmoothing: 'grayscale'
-            }}
+            TU SOLUCIÓN <span className="text-[#FF4000]">ESTRATÉGICA</span>
+          </motion.h1>
+          <motion.p 
+            className="text-base font-medium md:text-lg text-white/90"
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
           >
             Nuestro catalogo de productos premium a tu alcance
-          </p>
-          <div className="relative w-full max-w-xl">
-            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Buscar productos..."
-              className="h-14 border-2 border-border bg-card pl-12 text-lg shadow-lg focus-visible:ring-0 focus-visible:border-secondary transition-colors"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
+          </motion.p>
+        </motion.div>
       </section>
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-12">
         {/* Category Filter - Hidden on mobile */}
-        <section className="mb-12 hidden md:block">
-          <h2 className="mb-6 text-center text-3xl font-bold text-foreground">
-            Categorías
-          </h2>
-                {loadingCategories ? (
-                  <p className="text-center text-muted-foreground">Cargando categorías...</p>
-                ) : categoriesError ? (
-                  <p className="text-center text-destructive">{categoriesError}</p>
-                ) : (
-                  <CategoryFilter categories={categories} activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
-                )}
-        </section>
+        <motion.section 
+          className="mb-12 hidden md:block"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+            <motion.div 
+            className="bg-white rounded-3xl p-8 border border-gray-200 shadow-lg"
+            whileHover={{ scale: 1.01, boxShadow: "0 25px 50px -12px rgba(10, 16, 69, 0.15)" }}
+            transition={{ duration: 0.3 }}
+          >
+            <h2 className="mb-6 text-center text-3xl font-bold text-foreground">
+              Categorías
+            </h2>
+            {loadingCategories ? (
+              <p className="text-center text-muted-foreground">Cargando categorías...</p>
+            ) : categoriesError ? (
+              <p className="text-center text-destructive">{categoriesError}</p>
+            ) : (
+              <CategoryFilter categories={categories} activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
+            )}
+          </motion.div>
+        </motion.section>
 
         {/* Products Grid */}
-        <section>
+        <section className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-2xl font-bold text-foreground">
               {activeCategory === "Todos" ? "Todos los Productos" : activeCategory}
@@ -388,22 +358,18 @@ const Index = () => {
               {filteredProducts.length} productos
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredProducts.map((product) => {
-              const categoryName = product?.category?.name || product?.category || "";
-              return (
-                <ProductCard
-                  key={product.id}
-                  id={product.id}
-                  name={product.name}
-                  description={product.description}
-                  price={product.price}
-                  category={categoryName}
-                  image={product.image}
-                />
-              );
-            })}
-          </div>
+          <motion.div 
+            key={activeCategory}
+            className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-6"
+          >
+            {filteredProducts.map((product, index) => (
+              <AnimatedProductCard 
+                key={product.id}
+                product={product}
+                index={index}
+              />
+            ))}
+          </motion.div>
           {filteredProducts.length === 0 && (
             <div className="py-20 text-center">
               <p className="text-xl text-muted-foreground">

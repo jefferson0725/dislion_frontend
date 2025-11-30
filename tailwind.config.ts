@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['Poppins', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        hero: ['Bebas Neue', 'Impact', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Montserrat', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Montserrat', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        hero: ['Montserrat', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
