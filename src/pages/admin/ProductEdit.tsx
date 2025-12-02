@@ -85,7 +85,7 @@ function SortableProduct({ product, onEdit, onDelete }: SortableProductProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-white border-2 border-gray-100 rounded-xl p-4 sm:p-6 hover:border-orange-200 hover:shadow-md transition-all duration-300 hover:scale-[1.02] animate-in fade-in slide-in-from-left-4"
+      className="bg-white border-2 border-gray-100 rounded-xl p-4 sm:p-6 hover:border-orange-200 hover:shadow-md transition-all duration-200 hover:scale-[1.01]"
     >
       <div className="flex items-start gap-4">
         {/* Drag handle */}
@@ -575,7 +575,7 @@ const ProductEdit: React.FC = () => {
                   strategy={verticalListSortingStrategy}
                 >
                   {products.map((p, index) => (
-                    <ScrollReveal key={p.id} delay={index * 0.1}>
+                    <ScrollReveal key={p.id} delay={Math.min(index * 0.05, 0.3)}>
                       <SortableProduct
                         product={p}
                         onEdit={openEditor}
@@ -595,7 +595,7 @@ const ProductEdit: React.FC = () => {
                   p.category?.name.toLowerCase().includes(searchQuery.toLowerCase())
                 )
                 .map((p, index) => (
-              <ScrollReveal key={p.id} delay={index * 0.1}>
+              <ScrollReveal key={p.id} delay={Math.min(index * 0.05, 0.3)}>
               <div
                 className="bg-white border-2 border-gray-100 rounded-xl p-4 sm:p-6 hover:border-orange-200 hover:shadow-md transition-all"
               >

@@ -18,8 +18,8 @@ const AnimatedProductCard = forwardRef<HTMLDivElement, AnimatedProductCardProps>
     });
 
     const categoryName = product?.category?.name || product?.category || "";
-    // Stagger secuencial: efecto baraja de cartas
-    const staggerDelay = index * 0.06;
+    // Stagger limitado: máximo 0.4s de delay
+    const staggerDelay = Math.min(index * 0.03, 0.4);
 
     return (
       <motion.div
@@ -35,24 +35,20 @@ const AnimatedProductCard = forwardRef<HTMLDivElement, AnimatedProductCardProps>
         }}
         initial={{ 
           opacity: 0, 
-          x: -80,
-          rotateY: -20,
-          rotateZ: -5
+          y: 20
         }}
         animate={isInView ? {
           opacity: 1,
-          x: 0,
-          rotateY: 0,
-          rotateZ: 0,
+          y: 0,
           transition: {
-            duration: 0.4,
+            duration: 0.3,
             delay: staggerDelay,
-            ease: [0.22, 0.61, 0.36, 1]
+            ease: "easeOut"
           }
         } : {}}
         whileHover={{ 
           scale: 1.02,
-          transition: { duration: 0.2 }
+          transition: { duration: 0.15 }
         }}
       >
         <ProductCard
