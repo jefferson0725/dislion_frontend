@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { X, Trash2, Heart } from "lucide-react";
-import { useWishlist } from "../context/WishlistContext";
+import { useWishlist } from "../hooks/useWishlist";
 import { formatPrice } from "@/utils/formatPrice";
 import { Button } from "@/components/ui/button";
 import axios from "axios";

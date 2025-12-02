@@ -47,7 +47,7 @@ import apiFetch from "../../utils/api";
 import { getToken } from "../../utils/tokenStore";
 import { toast } from "../../hooks/use-toast";
 import ProtectedRoute from "../../components/ProtectedRoute";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 import { formatPrice } from "../../utils/formatPrice";
 
 interface ProductSize {
@@ -119,7 +119,7 @@ function SortableProduct({ product, onEdit, onDelete }: SortableProductProps) {
         <div className="flex flex-col sm:flex-row gap-2">
           <Button
             onClick={() => onEdit(product)}
-            className="flex-shrink-0 bg-gradient-to-r from-secondary to-orange-500 hover:from-orange-500 hover:to-secondary transition-all hover:scale-105 active:scale-95"
+            className="flex-shrink-0 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 transition-all hover:scale-105 active:scale-95"
             size="sm"
           >
             <Pencil className="w-4 h-4 sm:mr-2" />
@@ -141,7 +141,7 @@ function SortableProduct({ product, onEdit, onDelete }: SortableProductProps) {
 }
 
 const ProductEdit: React.FC = () => {
-  const auth = useContext(AuthContext)!;
+  const { user } = useAuth();
   const [products, setProducts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -280,23 +280,26 @@ const ProductEdit: React.FC = () => {
   };
 
   const saveSizes = async (productId: number) => {
-    if (!editing || editingSizes.length === 0) return;
+    // Get IDs of sizes currently being edited
+    const currentSizeIds = new Set(editingSizes.filter(s => s.id).map(s => s.id));
 
-    // Get existing sizes
-    const existingIds = new Set(editingSizes.filter(s => s.id).map(s => s.id));
-
-    // Delete sizes that were removed
-    if (editing.sizes) {
+    // Delete sizes that were removed (exist in original but not in current)
+    if (editing && editing.sizes) {
       for (const existing of editing.sizes) {
-        if (!existingIds.has(existing.id)) {
-          await apiFetch(`/api/product-sizes/${existing.id}`, {
+        if (!currentSizeIds.has(existing.id)) {
+          console.log(`Deleting removed size ID: ${existing.id}`);
+          const res = await apiFetch(`/api/product-sizes/${existing.id}`, {
             method: "DELETE",
           });
+          if (!res.ok) {
+            const data = await res.json();
+            console.error(`Error deleting size ${existing.id}:`, data.error);
+          }
         }
       }
     }
 
-    // Create or update sizes
+    // Create or update remaining sizes
     for (let i = 0; i < editingSizes.length; i++) {
       const size = editingSizes[i];
 
@@ -485,10 +488,8 @@ const ProductEdit: React.FC = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error updating product");
       
-      // Save sizes if any
-      if (editingSizes.length > 0) {
-        await saveSizes(editing.id);
-      }
+      // Always save sizes to handle deletions
+      await saveSizes(editing.id);
       
       toast({ title: "Producto actualizado", description: data.name });
       await load();
@@ -499,7 +500,7 @@ const ProductEdit: React.FC = () => {
     }
   };
 
-  if (!auth?.user || auth.user.role !== "admin") {
+  if (!user || user.role !== "admin") {
     return (
       <div className="max-w-md mx-auto mt-12">
         <Alert variant="destructive">
@@ -620,7 +621,7 @@ const ProductEdit: React.FC = () => {
                   <div className="flex flex-col sm:flex-row gap-2">
                     <Button
                       onClick={() => openEditor(p)}
-                      className="flex-shrink-0 bg-gradient-to-r from-secondary to-orange-500 hover:from-orange-500 hover:to-secondary transition-all hover:scale-105 active:scale-95"
+                      className="flex-shrink-0 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 transition-all hover:scale-105 active:scale-95"
                       size="sm"
                     >
                       <Pencil className="w-4 h-4 sm:mr-2" />
@@ -887,7 +888,7 @@ const ProductEdit: React.FC = () => {
               <Button
                 onClick={handleSave}
                 disabled={loading || uploadingImage}
-                className="bg-gradient-to-r from-secondary to-orange-500 hover:from-orange-500 hover:to-secondary transition-all hover:scale-105 active:scale-95"
+                className="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 transition-all hover:scale-105 active:scale-95"
               >
                 {loading || uploadingImage ? (
                   <div className="flex items-center gap-2">

@@ -1,7 +1,7 @@
 import { MessageCircle, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useWishlist } from "../context/WishlistContext";
+import { useWishlist } from "../hooks/useWishlist";
 import WishlistDrawer from "./WishlistDrawer";
 
 const WhatsAppButton = () => {

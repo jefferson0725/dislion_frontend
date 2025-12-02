@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 import { PlusCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,32 +9,39 @@ import apiFetch from "../../utils/api";
 import AdminRoute from "../../components/AdminRoute";
 import { toast } from "../../hooks/use-toast";
 
+interface CategoryFormData {
+  name: string;
+  description: string;
+}
+
 const CategoryCreate: React.FC = () => {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<CategoryFormData>({
+    defaultValues: {
+      name: "",
+      description: ""
+    }
+  });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: CategoryFormData) => {
     setError(null);
     setLoading(true);
     try {
-      if (!name || !name.trim()) {
+      if (!data.name || !data.name.trim()) {
         setError("El nombre es requerido");
         toast({ title: "Error", description: "El nombre es requerido", variant: "destructive" });
         return;
       }
       const res = await apiFetch(`/api/categories`, {
         method: "POST",
-        body: JSON.stringify({ name: name.trim(), description }),
+        body: JSON.stringify({ name: data.name.trim(), description: data.description }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Error creando categoria");
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || "Error creando categoria");
       
-      toast({ title: "Categoría creada", description: data.name || "La categoría ha sido creada exitosamente" });
-      setName("");
-      setDescription("");
+      toast({ title: "Categoría creada", description: resData.name || "La categoría ha sido creada exitosamente" });
+      reset(); // Reset form using React Hook Form
     } catch (err: any) {
       setError(err.message || "Error");
       toast({ title: "Error", description: err.message || "Error al crear categoría", variant: "destructive" });
@@ -52,7 +60,7 @@ const CategoryCreate: React.FC = () => {
           <p className="text-gray-600 mt-1">Agrega una nueva categoría para organizar tus productos</p>
         </div>
 
-        <form onSubmit={submit} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {error && (
             <Alert variant="destructive" className="animate-in slide-in-from-top-2">
               <AlertCircle className="h-4 w-4" />
@@ -65,9 +73,7 @@ const CategoryCreate: React.FC = () => {
             <Input
               type="text"
               placeholder="Ej: Electrónica, Ropa, Alimentos..."
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
+              {...register("name", { required: true })}
               className="h-12 text-base border-2"
             />
           </div>
@@ -76,8 +82,7 @@ const CategoryCreate: React.FC = () => {
             <label className="text-sm font-semibold text-gray-700">Descripción (Opcional)</label>
             <Textarea
               placeholder="Describe brevemente esta categoría..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              {...register("description")}
               rows={4}
               className="text-base border-2 resize-none"
             />
@@ -86,7 +91,7 @@ const CategoryCreate: React.FC = () => {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-secondary to-orange-500 hover:from-orange-500 hover:to-secondary transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+            className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
           >
             {loading ? (
               <div className="flex items-center gap-2">

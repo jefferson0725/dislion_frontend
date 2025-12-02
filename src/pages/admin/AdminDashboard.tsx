@@ -4,14 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
+import { toast } from "@/hooks/use-toast";
 import CategoryCreate from "./CategoryCreate";
 import CategoryEdit from "./CategoryEdit";
 import ProductCreate from "./ProductCreate";
 import ProductEdit from "./ProductEdit";
 import { apiFetch } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
-import { useContext } from "react";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 import heroBanner from "@/assets/logo.png";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -59,24 +59,20 @@ const AdminDashboard: React.FC = () => {
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  const auth = useContext(AuthContext);
+  const { logout, user } = useAuth();
 
   const handleLogout = () => {
-    if (auth) {
-      auth.logout();
-      navigate("/login");
-    }
+    logout();
+    navigate("/login");
   };
 
   // Logout cuando el usuario abandona el panel
   useEffect(() => {
     return () => {
       // Este efecto de limpieza se ejecuta cuando el componente se desmonta
-      if (auth) {
-        auth.logout();
-      }
+      logout();
     };
-  }, [auth]);
+  }, [logout]);
 
   // Load WhatsApp number on mount
   useEffect(() => {
@@ -190,14 +186,12 @@ const AdminDashboard: React.FC = () => {
         throw new Error(errorData.error || "Error al guardar");
       }
 
-      setWhatsappSuccess(true);
-      setTimeout(() => setWhatsappSuccess(false), 3000);
+      toast({ title: "Configuración guardada", description: "Número de WhatsApp actualizado exitosamente" });
       
       // Auto-export después de guardar
       await handleExportData();
     } catch (err: any) {
-      setWhatsappError(err.message || "Error al guardar");
-      setTimeout(() => setWhatsappError(null), 3000);
+      toast({ title: "Error", description: err.message || "Error al guardar", variant: "destructive" });
     } finally {
       setWhatsappLoading(false);
     }
@@ -219,14 +213,12 @@ const AdminDashboard: React.FC = () => {
         throw new Error(errorData.error || "Error al guardar");
       }
 
-      setPricesSuccess(true);
-      setTimeout(() => setPricesSuccess(false), 3000);
+      toast({ title: "Configuración guardada", description: "Visibilidad de precios actualizada exitosamente" });
       
       // Auto-export después de guardar
       await handleExportData();
     } catch (err: any) {
-      setPricesError(err.message || "Error al guardar");
-      setTimeout(() => setPricesError(null), 3000);
+      toast({ title: "Error", description: err.message || "Error al guardar", variant: "destructive" });
     } finally {
       setPricesLoading(false);
     }
@@ -248,14 +240,12 @@ const AdminDashboard: React.FC = () => {
         throw new Error(errorData.error || "Error al guardar");
       }
 
-      setPhoneSuccess(true);
-      setTimeout(() => setPhoneSuccess(false), 3000);
+      toast({ title: "Configuración guardada", description: "Teléfono de contacto actualizado exitosamente" });
       
       // Auto-export después de guardar
       await handleExportData();
     } catch (err: any) {
-      setPhoneError(err.message || "Error al guardar");
-      setTimeout(() => setPhoneError(null), 3000);
+      toast({ title: "Error", description: err.message || "Error al guardar", variant: "destructive" });
     } finally {
       setPhoneLoading(false);
     }
@@ -277,14 +267,12 @@ const AdminDashboard: React.FC = () => {
         throw new Error(errorData.error || "Error al guardar");
       }
 
-      setEmailSuccess(true);
-      setTimeout(() => setEmailSuccess(false), 3000);
+      toast({ title: "Configuración guardada", description: "Email de contacto actualizado exitosamente" });
       
       // Auto-export después de guardar
       await handleExportData();
     } catch (err: any) {
-      setEmailError(err.message || "Error al guardar");
-      setTimeout(() => setEmailError(null), 3000);
+      toast({ title: "Error", description: err.message || "Error al guardar", variant: "destructive" });
     } finally {
       setEmailLoading(false);
     }
@@ -306,14 +294,12 @@ const AdminDashboard: React.FC = () => {
         throw new Error(errorData.error || "Error al guardar");
       }
 
-      setAddressSuccess(true);
-      setTimeout(() => setAddressSuccess(false), 3000);
+      toast({ title: "Configuración guardada", description: "Dirección actualizada exitosamente" });
       
       // Auto-export después de guardar
       await handleExportData();
     } catch (err: any) {
-      setAddressError(err.message || "Error al guardar");
-      setTimeout(() => setAddressError(null), 3000);
+      toast({ title: "Error", description: err.message || "Error al guardar", variant: "destructive" });
     } finally {
       setAddressLoading(false);
     }
@@ -335,14 +321,12 @@ const AdminDashboard: React.FC = () => {
         throw new Error(errorData.error || "Error al guardar");
       }
 
-      setShowAddressSuccess(true);
-      setTimeout(() => setShowAddressSuccess(false), 3000);
+      toast({ title: "Configuración guardada", description: "Visibilidad de dirección actualizada exitosamente" });
       
       // Auto-export después de guardar
       await handleExportData();
     } catch (err: any) {
-      setShowAddressError(err.message || "Error al guardar");
-      setTimeout(() => setShowAddressError(null), 3000);
+      toast({ title: "Error", description: err.message || "Error al guardar", variant: "destructive" });
     } finally {
       setShowAddressLoading(false);
     }
@@ -423,11 +407,9 @@ const AdminDashboard: React.FC = () => {
       }
 
       const data = await res.json();
-      setExportSuccess(true);
-      setTimeout(() => setExportSuccess(false), 5000);
+      toast({ title: "Datos exportados", description: "El archivo data.json se ha generado exitosamente" });
     } catch (err: any) {
-      setExportError(err.message || "Error al exportar datos");
-      setTimeout(() => setExportError(null), 5000);
+      toast({ title: "Error", description: err.message || "Error al exportar datos", variant: "destructive" });
     } finally {
       setExportLoading(false);
     }
@@ -452,30 +434,26 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <motion.div 
-      className="min-h-screen flex"
-      style={{ 
-        background: 'linear-gradient(135deg, #FFFFFF 0%, #FFE5D0 50%, #FFC299 100%)'
-      }}
+      className="min-h-screen flex bg-gray-50"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
     >
       {/* Sidebar - Desktop */}
       <motion.aside 
-        className="hidden lg:flex lg:flex-col lg:w-72 bg-white border-r border-gray-200 shadow-lg h-screen sticky top-0"
+        className="hidden lg:flex lg:flex-col lg:w-72 bg-[#0A1045] border-r-2 border-[#1a2570] shadow-lg h-screen sticky top-0"
         initial={{ x: -280 }}
         animate={{ x: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         {/* Logo */}
-        <div className="p-6 border-b border-gray-200 flex-shrink-0">
+        <div className="p-6 border-b-2 border-[#1a2570] flex-shrink-0">
           <img 
             src={heroBanner} 
             alt="DISLION" 
             className="h-16 mx-auto object-contain mb-3"
-            style={{ mixBlendMode: 'multiply' }}
           />
-          <h1 className="text-lg font-bold text-gray-800 text-center" style={{ fontFamily: 'Poppins, sans-serif' }}>
+          <h1 className="text-lg font-bold text-white text-center" style={{ fontFamily: 'Poppins, sans-serif' }}>
             Panel de Administración
           </h1>
         </div>
@@ -488,8 +466,8 @@ const AdminDashboard: React.FC = () => {
               onClick={() => setTab(item.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium transition-all duration-200 ${
                 tab === item.id
-                  ? 'bg-gradient-to-r from-secondary to-orange-500 text-white shadow-lg scale-105'
-                  : 'text-gray-700 hover:bg-orange-50 hover:text-secondary hover:scale-102'
+                  ? 'bg-white text-[#0A1045] shadow-lg scale-105'
+                  : 'text-white hover:bg-white/10 hover:scale-102'
               }`}
             >
               {item.icon}
@@ -499,12 +477,12 @@ const AdminDashboard: React.FC = () => {
         </nav>
 
         {/* Export Button */}
-        <div className="p-4 border-t border-gray-200 space-y-2 flex-shrink-0">
+        <div className="p-4 border-t-2 border-[#1a2570] space-y-2 flex-shrink-0">
           <Button
             variant="outline"
             onClick={handleExportData}
             disabled={exportLoading}
-            className="w-full border-2 bg-white text-gray-900 hover:bg-green-50 hover:border-green-500 hover:text-green-700 transition-all"
+            className="w-full border-2 border-white/20 bg-white/10 text-white hover:bg-white hover:text-[#0A1045] transition-all"
           >
             {exportLoading ? (
               <div className="flex items-center gap-2">
@@ -522,7 +500,7 @@ const AdminDashboard: React.FC = () => {
           <Button
             variant="outline"
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 bg-white hover:bg-red-50 text-gray-900 hover:text-red-700 border-gray-200 hover:border-red-300 transition-all"
+            className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-red-500 text-white border-white/20 hover:border-red-500 transition-all"
           >
             <LogOut className="w-4 h-4" />
             Cerrar Sesión
@@ -546,7 +524,7 @@ const AdminDashboard: React.FC = () => {
             
             {/* Sidebar Drawer */}
             <motion.aside 
-              className="lg:hidden fixed inset-y-0 left-0 w-72 bg-white shadow-2xl z-50 flex flex-col"
+              className="lg:hidden fixed inset-y-0 left-0 w-72 bg-[#0A1045] shadow-2xl z-50 flex flex-col"
               initial={{ x: -280 }}
               animate={{ x: 0 }}
               exit={{ x: -280 }}
@@ -556,22 +534,21 @@ const AdminDashboard: React.FC = () => {
             <div className="absolute top-4 right-4 z-10">
               <button
                 onClick={handleCloseSidebar}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors text-white"
                 aria-label="Cerrar menú"
               >
-                <X className="w-6 h-6 text-gray-600" />
+                <X className="w-6 h-6" />
               </button>
             </div>
 
             {/* Logo */}
-            <div className="p-6 border-b border-gray-200">
+            <div className="p-6 border-b-2 border-[#1a2570]">
               <img 
                 src={heroBanner} 
                 alt="DISLION" 
                 className="h-16 mx-auto object-contain mb-3"
-                style={{ mixBlendMode: 'multiply' }}
               />
-              <h1 className="text-lg font-bold text-gray-800 text-center" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              <h1 className="text-lg font-bold text-white text-center" style={{ fontFamily: 'Poppins, sans-serif' }}>
                 Panel de Administración
               </h1>
             </div>
@@ -587,8 +564,8 @@ const AdminDashboard: React.FC = () => {
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium transition-all duration-200 ${
                     tab === item.id
-                      ? 'bg-gradient-to-r from-secondary to-orange-500 text-white shadow-lg scale-105'
-                      : 'text-gray-700 hover:bg-orange-50 hover:text-secondary hover:scale-102'
+                      ? 'bg-white text-[#0A1045] shadow-lg scale-105'
+                      : 'text-white hover:bg-white/10 hover:scale-102'
                   }`}
                 >
                   {item.icon}
@@ -598,12 +575,12 @@ const AdminDashboard: React.FC = () => {
             </nav>
 
             {/* Export Button */}
-            <div className="p-4 border-t border-gray-200 space-y-2 flex-shrink-0">
+            <div className="p-4 border-t-2 border-[#1a2570] space-y-2 flex-shrink-0">
               <Button
                 variant="outline"
                 onClick={handleExportData}
                 disabled={exportLoading}
-                className="w-full border-2 bg-white text-gray-900 hover:bg-green-50 hover:border-green-500 hover:text-green-700 transition-all"
+                className="w-full border-2 border-white/20 bg-white/10 text-white hover:bg-white hover:text-[#0A1045] transition-all"
               >
                 {exportLoading ? (
                   <div className="flex items-center gap-2">
@@ -621,7 +598,7 @@ const AdminDashboard: React.FC = () => {
               <Button
                 variant="outline"
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 bg-white hover:bg-red-50 text-gray-900 hover:text-red-700 border-gray-200 hover:border-red-300 transition-all"
+                className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-red-500 text-white border-white/20 hover:border-red-500 transition-all"
               >
                 <LogOut className="w-4 h-4" />
                 Cerrar Sesión
@@ -635,20 +612,20 @@ const AdminDashboard: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Header - Mobile only */}
-        <header className="lg:hidden bg-white shadow-md border-b border-gray-200 sticky top-0 z-30">
+        <header className="lg:hidden bg-[#0A1045] shadow-md sticky top-0 z-30">
           <div className="px-4 py-4 flex items-center justify-between">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-white">
               {currentMenuItem?.icon}
-              <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              <h2 className="text-lg font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>
                 {currentMenuItem?.label}
               </h2>
             </div>
@@ -657,27 +634,8 @@ const AdminDashboard: React.FC = () => {
           </div>
         </header>
 
-        {/* Success/Error Alerts */}
+        {/* Success/Error Alerts - Solo para exportar datos */}
         <div className="flex-1 overflow-y-auto">
-          {exportSuccess && (
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-4">
-              <Alert className="bg-green-50 border-green-200 animate-in slide-in-from-top-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">
-                  ¡Datos exportados exitosamente! El archivo data.json se ha generado en el frontend.
-                </AlertDescription>
-              </Alert>
-            </div>
-          )}
-
-          {exportError && (
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-4">
-              <Alert variant="destructive" className="animate-in slide-in-from-top-2">
-                <AlertDescription>{exportError}</AlertDescription>
-              </Alert>
-            </div>
-          )}
-
           {/* Content Area */}
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
             <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 lg:p-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -704,7 +662,7 @@ const AdminDashboard: React.FC = () => {
                   </motion.div>
 
                   {/* Mostrar Precios */}
-                  <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-6 rounded-xl border-2 border-orange-100 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-75 hover:shadow-lg transition-all">
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border-2 border-blue-100 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-75 hover:shadow-lg transition-all">
                     <div className="flex items-center justify-between mb-2">
                       <label className="block text-sm font-semibold text-gray-700">
                         Mostrar Precios en Catálogo
@@ -712,7 +670,7 @@ const AdminDashboard: React.FC = () => {
                       <Switch
                         checked={showPrices}
                         onCheckedChange={setShowPrices}
-                        className="data-[state=checked]:bg-secondary"
+                        className="data-[state=checked]:bg-[#0A1045]"
                       />
                     </div>
                     <p className="text-sm text-gray-600">
@@ -738,7 +696,7 @@ const AdminDashboard: React.FC = () => {
                   <Button
                     onClick={handleSaveShowPrices}
                     disabled={pricesLoading}
-                    className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-secondary to-orange-500 hover:from-orange-500 hover:to-secondary transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                    className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
                   >
                     {pricesLoading ? (
                       <div className="flex items-center gap-2">
@@ -759,22 +717,7 @@ const AdminDashboard: React.FC = () => {
                       Configuración de WhatsApp
                     </h3>
 
-                    {whatsappSuccess && (
-                      <Alert className="bg-green-50 border-green-200 animate-in slide-in-from-top-2 mb-4">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                        <AlertDescription className="text-green-800">
-                          ¡Número de WhatsApp guardado exitosamente!
-                        </AlertDescription>
-                      </Alert>
-                    )}
-
-                    {whatsappError && (
-                      <Alert variant="destructive" className="animate-in slide-in-from-top-2 mb-4">
-                        <AlertDescription>{whatsappError}</AlertDescription>
-                      </Alert>
-                    )}
-
-                    <div className="bg-gradient-to-br from-orange-50 to-white p-6 rounded-xl border-2 border-orange-100">
+                    <div className="bg-gradient-to-br from-blue-50 to-white p-6 rounded-xl border-2 border-blue-100">
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Número de WhatsApp (con código de país)
                       </label>
@@ -793,7 +736,7 @@ const AdminDashboard: React.FC = () => {
                     <Button
                       onClick={handleSaveWhatsApp}
                       disabled={whatsappLoading}
-                      className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-secondary to-orange-500 hover:from-orange-500 hover:to-secondary transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 mt-4"
+                      className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 mt-4"
                     >
                       {whatsappLoading ? (
                         <div className="flex items-center gap-2">
@@ -815,22 +758,7 @@ const AdminDashboard: React.FC = () => {
                       Teléfono de Contacto (Footer)
                     </h3>
 
-                    {phoneSuccess && (
-                      <Alert className="bg-green-50 border-green-200 animate-in slide-in-from-top-2 mb-4">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                        <AlertDescription className="text-green-800">
-                          ¡Teléfono guardado exitosamente!
-                        </AlertDescription>
-                      </Alert>
-                    )}
-
-                    {phoneError && (
-                      <Alert variant="destructive" className="animate-in slide-in-from-top-2 mb-4">
-                        <AlertDescription>{phoneError}</AlertDescription>
-                      </Alert>
-                    )}
-
-                    <div className="bg-gradient-to-br from-orange-50 to-white p-6 rounded-xl border-2 border-orange-100">
+                    <div className="bg-gradient-to-br from-blue-50 to-white p-6 rounded-xl border-2 border-blue-100">
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Teléfono de Contacto
                       </label>
@@ -849,7 +777,7 @@ const AdminDashboard: React.FC = () => {
                     <Button
                       onClick={handleSaveContactPhone}
                       disabled={phoneLoading}
-                      className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-secondary to-orange-500 hover:from-orange-500 hover:to-secondary transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 mt-4"
+                      className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 mt-4"
                     >
                       {phoneLoading ? (
                         <div className="flex items-center gap-2">
@@ -871,22 +799,7 @@ const AdminDashboard: React.FC = () => {
                       Email de Contacto (Footer)
                     </h3>
 
-                    {emailSuccess && (
-                      <Alert className="bg-green-50 border-green-200 animate-in slide-in-from-top-2 mb-4">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                        <AlertDescription className="text-green-800">
-                          ¡Email guardado exitosamente!
-                        </AlertDescription>
-                      </Alert>
-                    )}
-
-                    {emailError && (
-                      <Alert variant="destructive" className="animate-in slide-in-from-top-2 mb-4">
-                        <AlertDescription>{emailError}</AlertDescription>
-                      </Alert>
-                    )}
-
-                    <div className="bg-gradient-to-br from-orange-50 to-white p-6 rounded-xl border-2 border-orange-100">
+                    <div className="bg-gradient-to-br from-blue-50 to-white p-6 rounded-xl border-2 border-blue-100">
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Email de Contacto
                       </label>
@@ -905,7 +818,7 @@ const AdminDashboard: React.FC = () => {
                     <Button
                       onClick={handleSaveContactEmail}
                       disabled={emailLoading}
-                      className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-secondary to-orange-500 hover:from-orange-500 hover:to-secondary transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 mt-4"
+                      className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 mt-4"
                     >
                       {emailLoading ? (
                         <div className="flex items-center gap-2">
@@ -928,7 +841,7 @@ const AdminDashboard: React.FC = () => {
                     </h3>
 
                     {/* Switch para mostrar/ocultar dirección */}
-                    <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-6 rounded-xl border-2 border-orange-100 mb-4">
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border-2 border-blue-100 mb-4">
                       <div className="flex items-center justify-between mb-2">
                         <label className="block text-sm font-semibold text-gray-700">
                           Mostrar Dirección en Footer
@@ -936,7 +849,7 @@ const AdminDashboard: React.FC = () => {
                         <Switch
                           checked={showAddress}
                           onCheckedChange={setShowAddress}
-                          className="data-[state=checked]:bg-secondary"
+                          className="data-[state=checked]:bg-[#0A1045]"
                         />
                       </div>
                       <p className="text-sm text-gray-600">
@@ -953,16 +866,10 @@ const AdminDashboard: React.FC = () => {
                       </Alert>
                     )}
 
-                    {showAddressError && (
-                      <Alert variant="destructive" className="animate-in slide-in-from-top-2 mb-4">
-                        <AlertDescription>{showAddressError}</AlertDescription>
-                      </Alert>
-                    )}
-
                     <Button
                       onClick={handleSaveShowAddress}
                       disabled={showAddressLoading}
-                      className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-secondary to-orange-500 hover:from-orange-500 hover:to-secondary transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 mb-6"
+                      className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 mb-6"
                     >
                       {showAddressLoading ? (
                         <div className="flex items-center gap-2">
@@ -977,22 +884,7 @@ const AdminDashboard: React.FC = () => {
                       )}
                     </Button>
 
-                    {addressSuccess && (
-                      <Alert className="bg-green-50 border-green-200 animate-in slide-in-from-top-2 mb-4">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                        <AlertDescription className="text-green-800">
-                          ¡Dirección guardada exitosamente!
-                        </AlertDescription>
-                      </Alert>
-                    )}
-
-                    {addressError && (
-                      <Alert variant="destructive" className="animate-in slide-in-from-top-2 mb-4">
-                        <AlertDescription>{addressError}</AlertDescription>
-                      </Alert>
-                    )}
-
-                    <div className="bg-gradient-to-br from-orange-50 to-white p-6 rounded-xl border-2 border-orange-100">
+                    <div className="bg-gradient-to-br from-blue-50 to-white p-6 rounded-xl border-2 border-blue-100">
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Dirección de la Tienda
                       </label>
@@ -1011,7 +903,7 @@ const AdminDashboard: React.FC = () => {
                     <Button
                       onClick={handleSaveContactAddress}
                       disabled={addressLoading}
-                      className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-secondary to-orange-500 hover:from-orange-500 hover:to-secondary transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 mt-4"
+                      className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 mt-4"
                     >
                       {addressLoading ? (
                         <div className="flex items-center gap-2">
@@ -1076,7 +968,7 @@ const AdminDashboard: React.FC = () => {
                   )}
 
                   <motion.div 
-                    className="bg-gradient-to-br from-orange-50 to-white p-6 rounded-xl border-2 border-orange-100 space-y-4"
+                    className="bg-gradient-to-br from-blue-50 to-white p-6 rounded-xl border-2 border-blue-100 space-y-4"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
@@ -1132,7 +1024,7 @@ const AdminDashboard: React.FC = () => {
                     <Button
                       onClick={handleChangePassword}
                       disabled={passwordLoading}
-                      className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-secondary to-orange-500 hover:from-orange-500 hover:to-secondary transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                      className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
                     >
                       {passwordLoading ? (
                         <div className="flex items-center gap-2">

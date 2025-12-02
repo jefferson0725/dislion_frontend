@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useContext } from "react";
+﻿import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useForm, useFieldArray } from "react-hook-form";
 import { Package, X, CheckCircle, AlertCircle, Image as ImageIcon, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,7 @@ import apiFetch from "../../utils/api";
 import { getToken } from "../../utils/tokenStore";
 import { toast } from "../../hooks/use-toast";
 import ProtectedRoute from "../../components/ProtectedRoute";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 
 interface ProductSize {
   id?: number;
@@ -23,12 +24,32 @@ interface ProductSize {
   imagePreview?: string | null;
 }
 
+interface ProductFormData {
+  name: string;
+  description: string;
+  price: number | "";
+  categoryId: string;
+  sizes: ProductSize[];
+}
+
 const ProductCreate: React.FC = () => {
-  const auth = useContext(AuthContext)!;
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState<number | "">("");
-  const [categoryId, setCategoryId] = useState<string>("");
+  const { user } = useAuth();
+  
+  const { register, control, handleSubmit, reset, watch, setValue } = useForm<ProductFormData>({
+    defaultValues: {
+      name: "",
+      description: "",
+      price: "",
+      categoryId: "",
+      sizes: []
+    }
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "sizes"
+  });
+
   const [categories, setCategories] = useState<Array<any>>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -36,11 +57,9 @@ const ProductCreate: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  
-  // Product sizes state
   const [hasSizes, setHasSizes] = useState(false);
-  const [sizes, setSizes] = useState<ProductSize[]>([]);
-  const [productId, setProductId] = useState<number | null>(null);
+
+  const sizes = watch("sizes");
 
   useEffect(() => {
     // load categories from API
@@ -57,24 +76,26 @@ const ProductCreate: React.FC = () => {
   }, []);
 
   const addSize = () => {
-    setSizes([...sizes, { size: "", price: "", image: null, imageFile: null, imagePreview: null }]);
+    append({ size: "", price: "", image: null, imageFile: null, imagePreview: null });
   };
 
   const removeSize = (index: number) => {
-    setSizes(sizes.filter((_, i) => i !== index));
+    remove(index);
   };
 
   const updateSize = (index: number, field: keyof ProductSize, value: any) => {
-    const newSizes = [...sizes];
-    newSizes[index] = { ...newSizes[index], [field]: value };
-    setSizes(newSizes);
+    setValue(`sizes.${index}.${field}` as any, value);
   };
 
   const handleSizeImageChange = (index: number, file: File | null) => {
     if (file) {
+      console.log(`Image selected for size ${index + 1}:`, file.name, file.size);
       const preview = URL.createObjectURL(file);
-      updateSize(index, "imageFile", file);
-      updateSize(index, "imagePreview", preview);
+      
+      setValue(`sizes.${index}.imageFile` as any, file);
+      setValue(`sizes.${index}.imagePreview` as any, preview);
+      
+      console.log(`Size ${index + 1} imageFile updated`);
     }
   };
 
@@ -87,12 +108,17 @@ const ProductCreate: React.FC = () => {
       const sanitizedSize = size.size.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 30);
       const filename = `${productId}-size-${sanitizedSize}.${ext}`;
 
+      console.log(`Uploading size image: ${filename}`);
+
       const form = new FormData();
       form.append("filename", filename);
       form.append("image", size.imageFile);
 
       const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:4000";
       const token = getToken();
+      
+      console.log(`Uploading to: ${API_ROOT}/api/uploads/frontend`);
+      
       const uploadRes = await axios.post(
         `${API_ROOT}/api/uploads/frontend`,
         form,
@@ -101,10 +127,16 @@ const ProductCreate: React.FC = () => {
         }
       );
 
-      return uploadRes.data.filename || filename;
+      console.log("Upload response:", uploadRes.data);
+      
+      const savedFilename = uploadRes.data.filename || filename;
+      console.log(`Size image saved as: ${savedFilename}`);
+      
+      return savedFilename;
     } catch (err: any) {
       console.error("Error uploading size image:", err);
-      throw err;
+      console.error("Error details:", err.response?.data);
+      throw new Error(`Error subiendo imagen del tamaño: ${err.response?.data?.error || err.message}`);
     }
   };
 
@@ -116,11 +148,21 @@ const ProductCreate: React.FC = () => {
         throw new Error(`Tamaño ${i + 1}: Completa el nombre y precio`);
       }
 
+      console.log(`Processing size ${i + 1}:`, {
+        size: size.size,
+        price: size.price,
+        hasImageFile: !!size.imageFile,
+        imageFileName: size.imageFile?.name
+      });
+
       let imageFilename = null;
       if (size.imageFile) {
+        console.log(`Uploading image for size ${i + 1}...`);
         imageFilename = await uploadSizeImage(i, productId);
+        console.log(`Image uploaded for size ${i + 1}: ${imageFilename}`);
       }
 
+      console.log(`Creating size ${i + 1} in database...`);
       const res = await apiFetch(`/api/product-sizes`, {
         method: "POST",
         body: JSON.stringify({
@@ -133,24 +175,36 @@ const ProductCreate: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
+        console.error(`Error creating size ${i + 1}:`, data);
         throw new Error(data.error || `Error creando tamaño ${i + 1}`);
       }
+
+      const createdSize = await res.json();
+      console.log(`Size ${i + 1} created successfully:`, createdSize);
     }
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (formData: ProductFormData) => {
     setError(null);
     setLoading(true);
     try {
-      // Validate category selection
-      if (!categoryId || categoryId === "0") {
+      // Validate required fields
+      if (!formData.description || !formData.description.trim()) {
+        throw new Error("La descripción es obligatoria");
+      }
+      if (!formData.categoryId || formData.categoryId === "0") {
         throw new Error("Debes seleccionar una categoría");
       }
 
       // First create the product without image
-      const payload: any = { name, description, price: Number(price) };
-      if (categoryId && categoryId !== "0") payload.categoryId = Number(categoryId);
+      const payload: any = { 
+        name: formData.name, 
+        description: formData.description, 
+        price: Number(formData.price) 
+      };
+      if (formData.categoryId && formData.categoryId !== "0") {
+        payload.categoryId = Number(formData.categoryId);
+      }
 
       const res = await apiFetch(`/api/products`, {
         method: "POST",
@@ -159,12 +213,10 @@ const ProductCreate: React.FC = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error creando producto");
 
-      setProductId(data.id);
-
       // If there's an image file selected, upload it with product ID and name
       if (imageFile && data.id) {
         const ext = imageFile.name.split('.').pop() || 'jpg';
-        const sanitizedName = name.toLowerCase()
+        const sanitizedName = formData.name.toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/^-+|-+$/g, '')
           .slice(0, 60);
@@ -221,20 +273,18 @@ const ProductCreate: React.FC = () => {
       }
 
       // Create product sizes if enabled
-      if (hasSizes && sizes.length > 0) {
+      if (hasSizes && formData.sizes.length > 0) {
+        console.log(`Creating ${formData.sizes.length} product sizes...`);
+        toast({ title: "Guardando tamaños", description: `Procesando ${formData.sizes.length} tamaño(s)...` });
         await createProductSizes(data.id);
+        toast({ title: "Tamaños guardados", description: "Todos los tamaños se crearon exitosamente" });
       }
 
       toast({ title: "Producto creado", description: data.name || "El producto ha sido creado exitosamente" });
-      setName("");
-      setDescription("");
-      setPrice("");
-      setCategoryId("");
+      reset();
       setImageFile(null);
       setImagePreview(null);
       setHasSizes(false);
-      setSizes([]);
-      setProductId(null);
     } catch (err: any) {
       setError(err.message || "Error");
       toast({ title: "Error", description: err.message || "Error al crear producto", variant: "destructive" });
@@ -243,7 +293,7 @@ const ProductCreate: React.FC = () => {
     }
   };
 
-  if (!auth?.user || auth.user.role !== "admin") {
+  if (!user || user.role !== "admin") {
     return (
       <div className="max-w-md mx-auto mt-12">
         <Alert variant="destructive">
@@ -264,7 +314,7 @@ const ProductCreate: React.FC = () => {
           <p className="text-gray-600 mt-1">Agrega un nuevo producto a tu catálogo</p>
         </div>
 
-        <form onSubmit={submit} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {error && (
             <Alert variant="destructive" className="animate-in slide-in-from-top-2">
               <AlertCircle className="h-4 w-4" />
@@ -277,22 +327,19 @@ const ProductCreate: React.FC = () => {
             <Input
               type="text"
               placeholder="Ej: Laptop Dell, Camiseta Nike..."
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
+              {...register("name", { required: true })}
               className="h-12 text-base border-2"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700">Descripción</label>
+            <label className="text-sm font-semibold text-gray-700">Descripción *</label>
             <Textarea
               placeholder="Describe los detalles del producto, características, materiales, tallas disponibles, etc."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              {...register("description", { required: true })}
               className="min-h-24 text-base border-2 resize-none"
             />
-            <p className="text-xs text-gray-500">{description.length}/500 caracteres</p>
+            <p className="text-xs text-gray-500">{watch("description")?.length || 0}/500 caracteres</p>
           </div>
 
           <div className="space-y-2">
@@ -304,24 +351,29 @@ const ProductCreate: React.FC = () => {
               <Input
                 type="number"
                 placeholder="0"
-                value={price}
-                onChange={(e) => setPrice(e.target.value === "" ? "" : Number(e.target.value))}
-                required
-                min="0"
+                {...register("price", { 
+                  required: true,
+                  min: 0,
+                  valueAsNumber: false,
+                  setValueAs: (v) => v === "" ? "" : Number(v)
+                })}
                 step="1000"
                 className="h-12 text-base border-2 pl-7"
               />
             </div>
-            {price !== "" && (
+            {watch("price") !== "" && (
               <p className="text-xs text-gray-500">
-                {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(Number(price))}
+                {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(Number(watch("price")))}
               </p>
             )}
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Categoría</label>
-            <Select value={categoryId} onValueChange={setCategoryId}>
+            <Select 
+              value={watch("categoryId")} 
+              onValueChange={(value) => setValue("categoryId", value)}
+            >
               <SelectTrigger className="h-12 border-2">
                 <SelectValue placeholder="Selecciona una categoría" />
               </SelectTrigger>
@@ -410,8 +462,8 @@ const ProductCreate: React.FC = () => {
                   Agrega los tamaños/presentaciones disponibles para este producto (ej: x100 unidades, 1 litro, etc.)
                 </p>
 
-                {sizes.map((size, index) => (
-                  <div key={index} className="bg-white p-4 rounded-lg border border-gray-200 space-y-3">
+                {fields.map((field, index) => (
+                  <div key={field.id} className="bg-white p-4 rounded-lg border border-gray-200 space-y-3">
                     <div className="flex justify-between items-center mb-3">
                       <h4 className="font-semibold text-gray-800">Tamaño {index + 1}</h4>
                       <Button
@@ -431,8 +483,7 @@ const ProductCreate: React.FC = () => {
                         <Input
                           type="text"
                           placeholder="Ej: S, M, L, XL"
-                          value={size.size}
-                          onChange={(e) => updateSize(index, "size", e.target.value)}
+                          {...register(`sizes.${index}.size` as const)}
                           className="h-10 text-sm border-2"
                         />
                       </div>
@@ -444,8 +495,9 @@ const ProductCreate: React.FC = () => {
                           <Input
                             type="number"
                             placeholder="0"
-                            value={size.price}
-                            onChange={(e) => updateSize(index, "price", e.target.value === "" ? "" : Number(e.target.value))}
+                            {...register(`sizes.${index}.price` as const, {
+                              setValueAs: (v) => v === "" ? "" : Number(v)
+                            })}
                             min="0"
                             step="1000"
                             className="h-10 text-sm border-2 pl-6"
@@ -457,10 +509,10 @@ const ProductCreate: React.FC = () => {
                     <div>
                       <label className="text-xs font-semibold text-gray-700 mb-1 block">Imagen para este tamaño</label>
                       <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-orange-400 transition-colors">
-                        {size.imagePreview ? (
+                        {sizes[index]?.imagePreview ? (
                           <div className="relative">
                             <img 
-                              src={size.imagePreview} 
+                              src={sizes[index].imagePreview} 
                               alt="size preview" 
                               className="w-full max-h-40 object-contain rounded mb-2"
                             />
@@ -469,9 +521,9 @@ const ProductCreate: React.FC = () => {
                               variant="destructive"
                               size="sm"
                               onClick={() => {
-                                updateSize(index, "imageFile", null);
-                                updateSize(index, "imagePreview", null);
-                                updateSize(index, "image", null);
+                                setValue(`sizes.${index}.imageFile` as any, null);
+                                setValue(`sizes.${index}.imagePreview` as any, null);
+                                setValue(`sizes.${index}.image` as any, null);
                               }}
                               className="absolute top-1 right-1"
                             >
@@ -511,7 +563,7 @@ const ProductCreate: React.FC = () => {
           <Button
             type="submit"
             disabled={loading || uploadingImage}
-            className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-secondary to-orange-500 hover:from-orange-500 hover:to-secondary transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+            className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
           >
             {loading || uploadingImage ? (
               <div className="flex items-center gap-2">

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
+import { useForm } from "react-hook-form";
 import { Edit, X, Save, AlertCircle, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,17 +16,26 @@ import {
 import apiFetch from "../../utils/api";
 import { toast } from "../../hooks/use-toast";
 import ProtectedRoute from "../../components/ProtectedRoute";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
+
+interface CategoryFormData {
+  name: string;
+  description: string;
+}
 
 const CategoryEdit: React.FC = () => {
-  const auth = useContext(AuthContext)!;
+  const { user } = useAuth();
   const [categories, setCategories] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
   const [editing, setEditing] = useState<any | null>(null);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+
+  const { register, handleSubmit, reset, setValue } = useForm<CategoryFormData>({
+    defaultValues: {
+      name: "",
+      description: ""
+    }
+  });
 
   const loadCategories = async () => {
     setError(null);
@@ -45,33 +55,32 @@ const CategoryEdit: React.FC = () => {
 
   const openEditor = (category: any) => {
     setEditing(category);
-    setName(category.name || "");
-    setDescription(category.description || "");
+    setValue("name", category.name || "");
+    setValue("description", category.description || "");
   };
 
   const closeEditor = () => {
     setEditing(null);
-    setName("");
-    setDescription("");
+    reset();
   };
 
-  const submitEdit = async () => {
+  const onSubmit = async (data: CategoryFormData) => {
     if (!editing) return;
     setError(null);
     setLoading(true);
 
     try {
       const payload: any = {};
-      if (name && name !== editing.name) payload.name = name;
-      if (description !== editing.description) payload.description = description;
+      if (data.name && data.name !== editing.name) payload.name = data.name;
+      if (data.description !== editing.description) payload.description = data.description;
 
       const res = await apiFetch(`/api/categories/${editing.id}`, {
         method: "PUT",
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Error actualizando categoría");
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || "Error actualizando categoría");
 
       toast({ title: "Categoría actualizada", description: "Los cambios se han guardado correctamente" });
       closeEditor();
@@ -122,7 +131,7 @@ const CategoryEdit: React.FC = () => {
                   </div>
                   <Button
                     onClick={() => openEditor(c)}
-                    className="flex-shrink-0 bg-gradient-to-r from-secondary to-orange-500 hover:from-orange-500 hover:to-secondary transition-all hover:scale-105 active:scale-95"
+                    className="flex-shrink-0 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 transition-all hover:scale-105 active:scale-95"
                     size="sm"
                   >
                     <Pencil className="w-4 h-4 sm:mr-2" />
@@ -142,12 +151,11 @@ const CategoryEdit: React.FC = () => {
               </DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-4 py-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700">Nombre *</label>
                 <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  {...register("name", { required: true })}
                   placeholder="Nombre de la categoría"
                   className="h-12 border-2"
                 />
@@ -156,42 +164,42 @@ const CategoryEdit: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700">Descripción</label>
                 <Textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  {...register("description")}
                   placeholder="Descripción de la categoría"
                   rows={3}
                   className="border-2 resize-none"
                 />
               </div>
-            </div>
 
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button
-                onClick={closeEditor}
-                variant="outline"
-                className="border-2"
-              >
-                <X className="w-4 h-4 mr-2" />
-                Cancelar
-              </Button>
-              <Button
-                onClick={submitEdit}
-                disabled={loading || !name.trim()}
-                className="bg-gradient-to-r from-secondary to-orange-500 hover:from-orange-500 hover:to-secondary transition-all hover:scale-105 active:scale-95"
-              >
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Guardando...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Save className="w-4 h-4" />
-                    Guardar
-                  </div>
-                )}
-              </Button>
-            </DialogFooter>
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button
+                  type="button"
+                  onClick={closeEditor}
+                  variant="outline"
+                  className="border-2"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 transition-all hover:scale-105 active:scale-95"
+                >
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Guardando...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Save className="w-4 h-4" />
+                      Guardar
+                    </div>
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       </div>

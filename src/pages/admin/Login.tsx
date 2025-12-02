@@ -1,5 +1,6 @@
-import React, { useState, useContext } from "react";
-import { AuthContext } from "../../context/AuthContext";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { LogIn, Lock, User, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,35 +10,40 @@ import apiFetch from "../../utils/api";
 import heroBanner from "@/assets/logo.png";
 import { motion } from "framer-motion";
 
+interface LoginFormData {
+  identifier: string;
+  password: string;
+}
+
 const Login: React.FC = () => {
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
+    mode: "onSubmit"
+  });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const auth = useContext(AuthContext)!;
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: LoginFormData) => {
     setError(null);
     try {
       setLoading(true);
       const res = await apiFetch(`/api/users/login`, {
         method: "POST",
-        body: JSON.stringify({ identifier, password }),
+        body: JSON.stringify(data),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Login failed");
+      const responseData = await res.json();
+      if (!res.ok) throw new Error(responseData.error || "Login failed");
 
-      auth.login(data.token, data.refreshToken, data.user);
+      login(responseData.token, responseData.refreshToken, responseData.user);
       
       // Start transition animation
       setIsTransitioning(true);
       
       // Wait for animation before navigating
       setTimeout(() => {
-        if (data.user && data.user.role === "admin") {
+        if (responseData.user && responseData.user.role === "admin") {
           navigate("/admin");
         } else {
           navigate("/products/create");
@@ -52,10 +58,7 @@ const Login: React.FC = () => {
 
   return (
     <motion.div 
-      className="min-h-screen flex items-center justify-center px-4 py-12"
-      style={{ 
-        background: 'linear-gradient(135deg, #FFFFFF 0%, #FFE5D0 50%, #FFC299 100%)'
-      }}
+      className="min-h-screen flex items-center justify-center px-4 py-12 bg-[#0A1045]"
       initial={{ opacity: 1 }}
       animate={{ opacity: isTransitioning ? 0 : 1 }}
       transition={{ duration: 0.5 }}
@@ -67,10 +70,9 @@ const Login: React.FC = () => {
             src={heroBanner} 
             alt="DISLION" 
             className="h-24 mx-auto object-contain mb-4"
-            style={{ mixBlendMode: 'multiply' }}
           />
           <motion.h1 
-            className="text-3xl font-bold text-gray-800" 
+            className="text-3xl font-bold text-white" 
             style={{ fontFamily: 'Poppins, sans-serif' }}
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -79,7 +81,7 @@ const Login: React.FC = () => {
             Panel de Administración
           </motion.h1>
           <motion.p 
-            className="text-gray-600 mt-2"
+            className="text-gray-300 mt-2"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
@@ -95,7 +97,7 @@ const Login: React.FC = () => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
-          <form onSubmit={submit} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Username/Email Input */}
             <div className="space-y-2">
               <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
@@ -106,10 +108,8 @@ const Login: React.FC = () => {
                 <Input
                   type="text"
                   placeholder="Ingresa tu usuario o email"
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  required
-                  className="h-12 pl-4 pr-4 text-base border-2 border-gray-200 focus:border-secondary transition-colors"
+                  {...register("identifier", { required: true })}
+                  className="h-12 pl-4 pr-4 text-base border-2 border-gray-200 focus:border-[#0A1045] transition-colors"
                 />
               </div>
             </div>
@@ -124,10 +124,8 @@ const Login: React.FC = () => {
                 <Input
                   type="password"
                   placeholder="Ingresa tu contraseña"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="h-12 pl-4 pr-4 text-base border-2 border-gray-200 focus:border-secondary transition-colors"
+                  {...register("password", { required: true })}
+                  className="h-12 pl-4 pr-4 text-base border-2 border-gray-200 focus:border-[#0A1045] transition-colors"
                 />
               </div>
             </div>
@@ -144,7 +142,7 @@ const Login: React.FC = () => {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-secondary to-orange-500 hover:from-orange-500 hover:to-secondary transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+              className="w-full h-12 text-base font-semibold bg-[#0A1045] hover:bg-[#0A1045]/90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
             >
               {loading ? (
                 <div className="flex items-center gap-2">
@@ -163,7 +161,7 @@ const Login: React.FC = () => {
 
         {/* Footer */}
         <motion.p 
-          className="text-center text-sm text-gray-600 mt-6"
+          className="text-center text-sm text-gray-300 mt-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.5 }}
