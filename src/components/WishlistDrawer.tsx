@@ -14,6 +14,7 @@ const WishlistDrawer = ({ isOpen, onClose }: WishlistDrawerProps) => {
   const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
   const [isAnimating, setIsAnimating] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState<string>('573007571199');
+  const [showPrices, setShowPrices] = useState(true);
 
   useEffect(() => {
     if (isOpen) {
@@ -21,19 +22,20 @@ const WishlistDrawer = ({ isOpen, onClose }: WishlistDrawerProps) => {
     }
   }, [isOpen]);
 
-  // Load WhatsApp number
+  // Load WhatsApp number and show_prices setting
   useEffect(() => {
-    const loadWhatsApp = async () => {
+    const loadSettings = async () => {
       try {
         const res = await axios.get('/data.json');
         const data = res.data;
         const number = data.settings?.whatsapp_number || '573007571199';
         setWhatsappNumber(number);
+        setShowPrices(data.settings?.show_prices === 'true' || data.settings?.show_prices === true);
       } catch (err) {
-        console.error('Error loading WhatsApp number:', err);
+        console.error('Error loading settings:', err);
       }
     };
-    loadWhatsApp();
+    loadSettings();
   }, []);
 
   const handleWhatsAppClick = () => {
@@ -134,9 +136,11 @@ const WishlistDrawer = ({ isOpen, onClose }: WishlistDrawerProps) => {
                         Tamaño: {product.selectedSize.size}
                       </p>
                     )}
-                    <p className="text-lg font-bold text-accent mt-1">
-                      {formatPrice(product.price)}
-                    </p>
+                    {showPrices && (
+                      <p className="text-lg font-bold text-accent mt-1">
+                        {formatPrice(product.price)}
+                      </p>
+                    )}
                   </div>
 
                   {/* Remove button */}
