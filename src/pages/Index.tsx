@@ -192,7 +192,7 @@ const Index = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                type="search"
+                type="text"
                 placeholder="Buscar productos..."
                 className="h-10 pl-10 pr-3"
                 value={searchQuery}
@@ -268,7 +268,7 @@ const Index = () => {
                 >
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
                   <Input
-                    type="search"
+                    type="text"
                     placeholder="Buscar productos..."
                     className="h-10 pl-10 pr-10 bg-white"
                     value={searchQuery}
