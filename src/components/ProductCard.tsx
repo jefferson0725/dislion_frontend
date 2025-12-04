@@ -1,8 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Eye } from "lucide-react";
+import { Heart, Eye, X } from "lucide-react";
 import { formatPrice } from "@/utils/formatPrice";
-import { useWishlist } from "../context/WishlistContext";
+import { useWishlist } from "../hooks/useWishlist";
 import { useState, useEffect } from "react";
 import { apiFetch } from "@/utils/api";
 import {
@@ -10,6 +10,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -36,6 +38,9 @@ const ProductCard = ({ id, image, name, description, price, category, sizes = []
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedSizeId, setSelectedSizeId] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<ProductSize | null>(null);
+  const [modalImage, setModalImage] = useState<string>(image);
+  const [modalPrice, setModalPrice] = useState<number>(price);
+  const [imageTransition, setImageTransition] = useState(false);
 
   // Load show_prices setting on mount
   useEffect(() => {
@@ -53,19 +58,45 @@ const ProductCard = ({ id, image, name, description, price, category, sizes = []
     loadShowPrices();
   }, []);
 
-  // Set default selected size when sizes change
+  // No auto-select first size - user must select manually
+
+  // Reset modal image and price when dialog opens
   useEffect(() => {
-    if (sizes && sizes.length > 0 && !selectedSizeId) {
-      setSelectedSizeId(String(sizes[0].id));
-      setSelectedSize(sizes[0]);
+    if (isDialogOpen) {
+      setModalImage(image);
+      setModalPrice(price);
+      setSelectedSizeId(null);
+      setSelectedSize(null);
     }
-  }, [sizes, selectedSizeId]);
+  }, [isDialogOpen, image, price]);
 
   // Update selected size when size changes
   const handleSizeChange = (sizeId: string) => {
-    setSelectedSizeId(sizeId);
-    const size = sizes.find(s => String(s.id) === sizeId);
-    setSelectedSize(size || null);
+    // Trigger fade out animation
+    setImageTransition(true);
+    
+    setTimeout(() => {
+      if (sizeId === "original") {
+        // User selected the original product
+        setSelectedSizeId(null);
+        setSelectedSize(null);
+        setModalImage(image);
+        setModalPrice(price);
+      } else {
+        setSelectedSizeId(sizeId);
+        const size = sizes.find(s => String(s.id) === sizeId);
+        setSelectedSize(size || null);
+        
+        // Update modal image and price
+        if (size) {
+          setModalImage(size.image || image);
+          setModalPrice(size.price);
+        }
+      }
+      
+      // Trigger fade in animation
+      setTimeout(() => setImageTransition(false), 50);
+    }, 200);
   };
 
   // Generate unique key for wishlist (includes size if selected)
@@ -85,9 +116,9 @@ const ProductCard = ({ id, image, name, description, price, category, sizes = []
     } else {
       addToWishlist({ 
         id, 
-        image: displayImage, 
+        image, // Always use the card image for wishlist
         name, 
-        price: displayPrice, 
+        price: selectedSize ? selectedSize.price : price, 
         category,
         selectedSize: selectedSize || null,
         uniqueKey
@@ -95,9 +126,9 @@ const ProductCard = ({ id, image, name, description, price, category, sizes = []
     }
   };
 
-  // Determine the display price and image
-  const displayPrice = selectedSize ? selectedSize.price : price;
-  const displayImage = selectedSize && selectedSize.image ? selectedSize.image : image;
+  // Determine the display price and image for the CARD (not modal)
+  const displayPrice = price;
+  const displayImage = image;
 
   return (
     <>
@@ -161,16 +192,33 @@ const ProductCard = ({ id, image, name, description, price, category, sizes = []
       {/* Product Detail Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">{name}</DialogTitle>
+          {/* Sticky close button - always visible */}
+          <div className="sticky top-0 z-50 flex justify-end pointer-events-none">
+            <DialogClose className="pointer-events-auto rounded-full opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none disabled:pointer-events-none bg-background/95 backdrop-blur-sm p-2 border border-border shadow-sm hover:shadow-md">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Cerrar</span>
+            </DialogClose>
+          </div>
+          
+          {/* Regular header - scrolls with content */}
+          <DialogHeader className="-mt-10">
+            <DialogTitle className="text-2xl font-bold pr-10">{name}</DialogTitle>
+            <DialogDescription className="sr-only">
+              Detalles del producto {name}
+            </DialogDescription>
           </DialogHeader>
+          
           <div className="grid md:grid-cols-2 gap-6 mt-4">
             {/* Image - sticky to stay visible */}
-            <div className="aspect-square overflow-hidden rounded-lg bg-muted md:sticky md:top-4 md:self-start">
+            <div className="aspect-square overflow-hidden rounded-lg bg-muted md:sticky md:top-4 md:self-start relative">
               <img
-                src={displayImage}
+                src={modalImage}
                 alt={name}
-                className="h-full w-full object-cover"
+                className={`h-full w-full object-cover transition-all duration-300 ${
+                  imageTransition 
+                    ? 'opacity-0 scale-95' 
+                    : 'opacity-100 scale-100'
+                }`}
               />
             </div>
             
@@ -189,14 +237,17 @@ const ProductCard = ({ id, image, name, description, price, category, sizes = []
                   <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground mb-2">
                     Tamaño
                   </p>
-                  <Select value={selectedSizeId || ""} onValueChange={handleSizeChange}>
+                  <Select value={selectedSizeId || "original"} onValueChange={handleSizeChange}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecciona un tamaño" />
+                      <SelectValue placeholder="Seleccionar tamaño" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="original">
+                        {showPrices ? `Original - ${formatPrice(price)}` : 'Original'}
+                      </SelectItem>
                       {sizes.map((size) => (
                         <SelectItem key={size.id} value={String(size.id)}>
-                          {size.size} - {formatPrice(size.price)}
+                          {showPrices ? `${size.size} - ${formatPrice(size.price)}` : size.size}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -220,7 +271,13 @@ const ProductCard = ({ id, image, name, description, price, category, sizes = []
                   Precio
                 </p>
                 {showPrices ? (
-                  <p className="text-3xl font-bold text-accent">{formatPrice(displayPrice)}</p>
+                  <p className={`text-3xl font-bold text-accent transition-all duration-300 ${
+                    imageTransition 
+                      ? 'opacity-0 translate-y-2' 
+                      : 'opacity-100 translate-y-0'
+                  }`}>
+                    {formatPrice(modalPrice)}
+                  </p>
                 ) : (
                   <p className="text-lg text-muted-foreground">Precio bajo consulta</p>
                 )}

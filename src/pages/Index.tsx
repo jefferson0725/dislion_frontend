@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Search, Menu, X, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import CategoryFilter from "@/components/CategoryFilter";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import WishlistDrawer from "@/components/WishlistDrawer";
 import Footer from "@/components/Footer";
-import { useWishlist } from "@/context/WishlistContext";
+import { useWishlist } from "@/hooks/useWishlist";
 import { useDataVersion } from "@/hooks/useDataVersion";
 import heroBanner from "@/assets/logo.png";
 import { motion, AnimatePresence } from "framer-motion";
@@ -256,26 +256,58 @@ const Index = () => {
 
           {/* Desktop actions */}
           <div className="hidden md:flex items-center gap-4">
-            {isSearchOpen ? (
-              <div className="relative w-80">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-                <Input
-                  type="search"
-                  placeholder="Buscar productos..."
-                  className="h-10 pl-10 pr-3 bg-white"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  autoFocus
-                />
-              </div>
-            ) : (
-              <button
-                onClick={() => setIsSearchOpen(true)}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors"
-              >
-                <Search className="h-5 w-5 text-white" />
-              </button>
-            )}
+            <AnimatePresence mode="wait">
+              {isSearchOpen ? (
+                <motion.div 
+                  key="search-input"
+                  className="relative"
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 320, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                >
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+                  <Input
+                    type="search"
+                    placeholder="Buscar productos..."
+                    className="h-10 pl-10 pr-10 bg-white"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    autoFocus
+                    onBlur={() => {
+                      if (searchQuery === "") {
+                        setIsSearchOpen(false);
+                      }
+                    }}
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => {
+                        setSearchQuery("");
+                        setIsSearchOpen(false);
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </motion.div>
+              ) : (
+                <motion.button
+                  key="search-button"
+                  onClick={() => setIsSearchOpen(true)}
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Search className="h-5 w-5 text-white" />
+                </motion.button>
+              )}
+            </AnimatePresence>
             
             {/* Wishlist button */}
             <button

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
 import { setTokens } from "../utils/tokenStore";
 import { setLogoutCallback } from "../utils/api";
@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, []);
 
-  const login = (t: string, rt: string, u: any) => {
+  const login = useCallback((t: string, rt: string, u: any) => {
     setToken(t);
     setRefreshToken(rt);
     setUser(u);
@@ -46,9 +46,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem("refreshToken", rt);
     localStorage.setItem("user", JSON.stringify(u));
     setTokens(t, rt);
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     // call backend to revoke refresh token
     const rt = localStorage.getItem("refreshToken");
     if (rt) {
@@ -65,9 +65,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem("user");
     setTokens(null, null);
     window.location.href = '/login';
-  };
+  }, []);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     const rt = localStorage.getItem("refreshToken");
     if (!rt) throw new Error("No refresh token");
 
@@ -81,10 +81,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem("refreshToken", data.refreshToken);
     setTokens(data.accessToken, data.refreshToken);
     return data.accessToken;
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({ token, refreshToken, user, login, logout, refresh }),
+    [token, refreshToken, user, login, logout, refresh]
+  );
 
   return (
-    <AuthContext.Provider value={{ token, refreshToken, user, login, logout, refresh }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

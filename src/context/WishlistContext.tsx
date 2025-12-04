@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useMemo, useCallback } from "react";
 
 interface WishlistItem {
   id: number;
@@ -49,28 +49,33 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [wishlist]);
 
-  const addToWishlist = (product: WishlistItem) => {
+  const addToWishlist = useCallback((product: WishlistItem) => {
     setWishlist((prev) => {
       const exists = prev.find((p) => p.uniqueKey === product.uniqueKey);
       if (exists) return prev;
       return [...prev, product];
     });
-  };
+  }, []);
 
-  const removeFromWishlist = (uniqueKey: string) => {
+  const removeFromWishlist = useCallback((uniqueKey: string) => {
     setWishlist((prev) => prev.filter((p) => p.uniqueKey !== uniqueKey));
-  };
+  }, []);
 
-  const isInWishlist = (uniqueKey: string) => {
+  const isInWishlist = useCallback((uniqueKey: string) => {
     return wishlist.some((p) => p.uniqueKey === uniqueKey);
-  };
+  }, [wishlist]);
 
-  const clearWishlist = () => {
+  const clearWishlist = useCallback(() => {
     setWishlist([]);
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({ wishlist, addToWishlist, removeFromWishlist, isInWishlist, clearWishlist }),
+    [wishlist, addToWishlist, removeFromWishlist, isInWishlist, clearWishlist]
+  );
 
   return (
-    <WishlistContext.Provider value={{ wishlist, addToWishlist, removeFromWishlist, isInWishlist, clearWishlist }}>
+    <WishlistContext.Provider value={value}>
       {children}
     </WishlistContext.Provider>
   );
