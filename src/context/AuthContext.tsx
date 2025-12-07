@@ -3,7 +3,7 @@ import axios from "axios";
 import { setTokens } from "../utils/tokenStore";
 import { setLogoutCallback } from "../utils/api";
 
-const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const API_ROOT = import.meta.env.VITE_API_URL ?? "";
 
 type AuthContextType = {
   token: string | null;

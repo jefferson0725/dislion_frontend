@@ -114,7 +114,7 @@ const ProductCreate: React.FC = () => {
       form.append("filename", filename);
       form.append("image", size.imageFile);
 
-      const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:4000";
+      const API_ROOT = import.meta.env.VITE_API_URL ?? "";
       const token = getToken();
       
       console.log(`Uploading to: ${API_ROOT}/api/uploads/frontend`);
@@ -228,7 +228,7 @@ const ProductCreate: React.FC = () => {
         const t = toast({ title: "Guardando imagen", description: `0%` });
         
         try {
-          const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:4000";
+          const API_ROOT = import.meta.env.VITE_API_URL ?? "";
           const token = getToken();
           
           const form = new FormData();

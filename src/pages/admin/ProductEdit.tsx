@@ -262,7 +262,7 @@ const ProductEdit: React.FC = () => {
       form.append("filename", filename);
       form.append("image", size.imageFile);
 
-      const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:4000";
+      const API_ROOT = import.meta.env.VITE_API_URL ?? "";
       const token = getToken();
       const uploadRes = await axios.post(
         `${API_ROOT}/api/uploads/frontend`,
@@ -432,7 +432,7 @@ const ProductEdit: React.FC = () => {
       if (imageFile) {
         setUploadingImage(true);
         setUploadProgress(0);
-        const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:4000";
+        const API_ROOT = import.meta.env.VITE_API_URL ?? "";
         const token = getToken();
         const t = toast({ title: "Guardando imagen", description: `0%` });
 
@@ -449,7 +449,6 @@ const ProductEdit: React.FC = () => {
           form.append("filename", filename);
           form.append("image", imageFile);
 
-          const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:4000";
           const uploadRes = await axios.post(
             `${API_ROOT}/api/uploads/frontend`,
             form,
