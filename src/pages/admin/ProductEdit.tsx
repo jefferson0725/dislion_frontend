@@ -243,9 +243,19 @@ const ProductEdit: React.FC = () => {
 
   const handleSizeImageChange = (index: number, file: File | null) => {
     if (file) {
+      console.log(`Image selected for size ${index + 1}:`, file.name, file.size);
       const preview = URL.createObjectURL(file);
-      updateSize(index, "imageFile", file);
-      updateSize(index, "imagePreview", preview);
+      // Update both fields in a single state update to avoid race conditions
+      setEditingSizes(prev => {
+        const newSizes = [...prev];
+        newSizes[index] = { 
+          ...newSizes[index], 
+          imageFile: file, 
+          imagePreview: preview 
+        };
+        return newSizes;
+      });
+      console.log(`Size ${index + 1} imageFile updated`);
     }
   };
 

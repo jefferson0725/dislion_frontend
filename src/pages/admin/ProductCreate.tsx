@@ -58,6 +58,9 @@ const ProductCreate: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasSizes, setHasSizes] = useState(false);
+  
+  // Separate state for size images (react-hook-form doesn't handle File objects well with watch)
+  const [sizeImages, setSizeImages] = useState<Map<number, { file: File; preview: string }>>(new Map());
 
   const sizes = watch("sizes");
 
@@ -80,6 +83,19 @@ const ProductCreate: React.FC = () => {
   };
 
   const removeSize = (index: number) => {
+    // Remove the image from sizeImages state
+    setSizeImages(prev => {
+      const newMap = new Map();
+      prev.forEach((value, key) => {
+        if (key < index) {
+          newMap.set(key, value);
+        } else if (key > index) {
+          // Re-index items after the removed one
+          newMap.set(key - 1, value);
+        }
+      });
+      return newMap;
+    });
     remove(index);
   };
 
@@ -92,19 +108,31 @@ const ProductCreate: React.FC = () => {
       console.log(`Image selected for size ${index + 1}:`, file.name, file.size);
       const preview = URL.createObjectURL(file);
       
-      setValue(`sizes.${index}.imageFile` as any, file);
+      // Store in separate state (more reliable than react-hook-form for File objects)
+      setSizeImages(prev => {
+        const newMap = new Map(prev);
+        newMap.set(index, { file, preview });
+        return newMap;
+      });
+      
+      // Also update form for preview display
       setValue(`sizes.${index}.imagePreview` as any, preview);
       
-      console.log(`Size ${index + 1} imageFile updated`);
+      console.log(`Size ${index + 1} imageFile updated in sizeImages state`);
     }
   };
 
   const uploadSizeImage = async (sizeIndex: number, productId: number) => {
     const size = sizes[sizeIndex];
-    if (!size.imageFile) return null;
+    const sizeImageData = sizeImages.get(sizeIndex);
+    
+    if (!sizeImageData) {
+      console.log(`No image file found for size ${sizeIndex + 1}`);
+      return null;
+    }
 
     try {
-      const ext = size.imageFile.name.split('.').pop() || 'jpg';
+      const ext = sizeImageData.file.name.split('.').pop() || 'jpg';
       const sanitizedSize = size.size.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 30);
       const filename = `${productId}-size-${sanitizedSize}.${ext}`;
 
@@ -112,7 +140,7 @@ const ProductCreate: React.FC = () => {
 
       const form = new FormData();
       form.append("filename", filename);
-      form.append("image", size.imageFile);
+      form.append("image", sizeImageData.file);
 
       const API_ROOT = import.meta.env.VITE_API_URL ?? "";
       const token = getToken();
@@ -143,6 +171,7 @@ const ProductCreate: React.FC = () => {
   const createProductSizes = async (productId: number) => {
     for (let i = 0; i < sizes.length; i++) {
       const size = sizes[i];
+      const sizeImageData = sizeImages.get(i);
 
       if (!size.size || size.price === "") {
         throw new Error(`Tamaño ${i + 1}: Completa el nombre y precio`);
@@ -151,12 +180,12 @@ const ProductCreate: React.FC = () => {
       console.log(`Processing size ${i + 1}:`, {
         size: size.size,
         price: size.price,
-        hasImageFile: !!size.imageFile,
-        imageFileName: size.imageFile?.name
+        hasImageFile: !!sizeImageData,
+        imageFileName: sizeImageData?.file.name
       });
 
       let imageFilename = null;
-      if (size.imageFile) {
+      if (sizeImageData) {
         console.log(`Uploading image for size ${i + 1}...`);
         imageFilename = await uploadSizeImage(i, productId);
         console.log(`Image uploaded for size ${i + 1}: ${imageFilename}`);
@@ -285,6 +314,7 @@ const ProductCreate: React.FC = () => {
       setImageFile(null);
       setImagePreview(null);
       setHasSizes(false);
+      setSizeImages(new Map()); // Clear size images state
     } catch (err: any) {
       setError(err.message || "Error");
       toast({ title: "Error", description: err.message || "Error al crear producto", variant: "destructive" });
@@ -509,10 +539,10 @@ const ProductCreate: React.FC = () => {
                     <div>
                       <label className="text-xs font-semibold text-gray-700 mb-1 block">Imagen para este tamaño</label>
                       <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-orange-400 transition-colors">
-                        {sizes[index]?.imagePreview ? (
+                        {sizeImages.get(index)?.preview ? (
                           <div className="relative">
                             <img 
-                              src={sizes[index].imagePreview} 
+                              src={sizeImages.get(index)!.preview} 
                               alt="size preview" 
                               className="w-full max-h-40 object-contain rounded mb-2"
                             />
@@ -521,9 +551,11 @@ const ProductCreate: React.FC = () => {
                               variant="destructive"
                               size="sm"
                               onClick={() => {
-                                setValue(`sizes.${index}.imageFile` as any, null);
-                                setValue(`sizes.${index}.imagePreview` as any, null);
-                                setValue(`sizes.${index}.image` as any, null);
+                                setSizeImages(prev => {
+                                  const newMap = new Map(prev);
+                                  newMap.delete(index);
+                                  return newMap;
+                                });
                               }}
                               className="absolute top-1 right-1"
                             >
