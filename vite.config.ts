@@ -20,23 +20,41 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {
-        manualChunks(id) {
+        manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+            // React y TODAS las librerías que dependen de React deben estar juntas
+            // para garantizar el orden correcto de carga
+            if (id.includes('react') || 
+                id.includes('react-dom') || 
+                id.includes('scheduler') ||
+                id.includes('react-router') ||
+                id.includes('framer-motion') ||
+                id.includes('motion') ||
+                id.includes('@radix-ui') ||
+                id.includes('@dnd-kit') ||
+                id.includes('react-hook-form') ||
+                id.includes('@hookform') ||
+                id.includes('react-day-picker') ||
+                id.includes('@tanstack/react-query') ||
+                id.includes('recharts')) {
               return 'vendor-react';
             }
-            if (id.includes('@radix-ui')) {
-              return 'vendor-radix';
+            
+            // Utilidades sin dependencia de React
+            if (id.includes('class-variance-authority') ||
+                id.includes('clsx') ||
+                id.includes('tailwind-merge') ||
+                id.includes('date-fns') ||
+                id.includes('zod') ||
+                id.includes('d3-') ||
+                id.includes('lucide-react')) {
+              return 'vendor-utils';
             }
-            if (id.includes('framer-motion')) {
-              return 'vendor-motion';
-            }
-            if (id.includes('@dnd-kit')) {
-              return 'vendor-dnd';
-            }
+            
+            // Resto de vendor
             return 'vendor';
           }
         },
