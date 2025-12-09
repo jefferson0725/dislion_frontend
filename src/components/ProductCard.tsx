@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Heart, Eye, X } from "lucide-react";
 import { formatPrice } from "@/utils/formatPrice";
 import { useWishlist } from "../hooks/useWishlist";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { apiFetch } from "@/utils/api";
 import {
   Dialog,
@@ -41,6 +41,11 @@ const ProductCard = ({ id, image, name, description, price, category, sizes = []
   const [modalImage, setModalImage] = useState<string>(image);
   const [modalPrice, setModalPrice] = useState<number>(price);
   const [imageTransition, setImageTransition] = useState(false);
+  
+  // Lazy loading state for card image
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   // Load show_prices setting on mount
   useEffect(() => {
@@ -134,9 +139,17 @@ const ProductCard = ({ id, image, name, description, price, category, sizes = []
     <>
       <Card className="group overflow-hidden border border-gray-200 bg-white shadow-md hover:shadow-xl hover:shadow-[#0A1045]/15 transition-all duration-300 flex flex-col h-full hover:scale-[1.02]">
         <div 
-          className="aspect-square overflow-hidden bg-gray-50 cursor-pointer relative"
+          className="aspect-square overflow-hidden bg-gray-100 cursor-pointer relative"
           onClick={() => description && setIsDialogOpen(true)}
         >
+          {/* Skeleton loader */}
+          {!imageLoaded && !imageError && (
+            <div className="absolute inset-0 bg-gray-200 animate-pulse">
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer" 
+                   style={{ backgroundSize: '200% 100%' }} />
+            </div>
+          )}
+          
           {/* Botón de Wishlist - arriba a la izquierda */}
           <button
             onClick={(e) => {
@@ -153,10 +166,26 @@ const ProductCard = ({ id, image, name, description, price, category, sizes = []
           </button>
 
           <img
+            ref={imgRef}
             src={displayImage}
             alt={name}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+            onLoad={() => setImageLoaded(true)}
+            onError={() => {
+              setImageError(true);
+              setImageLoaded(true);
+            }}
+            className={`h-full w-full object-cover transition-all duration-500 group-hover:scale-105 ${
+              imageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
           />
+          
+          {/* Error fallback */}
+          {imageError && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+              <span className="text-gray-400 text-sm">Sin imagen</span>
+            </div>
+          )}
         </div>
         
         <div className="p-4 flex flex-col flex-1">

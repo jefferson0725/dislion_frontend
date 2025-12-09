@@ -422,11 +422,11 @@ const ProductCreate: React.FC = () => {
             <label className="text-sm font-semibold text-gray-700">Imagen del Producto</label>
             <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-orange-400 transition-colors">
               {imagePreview ? (
-                <div className="relative">
+                <div className="relative mb-4">
                   <img 
                     src={imagePreview} 
                     alt="preview" 
-                    className="w-full max-h-64 object-contain rounded-lg mb-4"
+                    className="w-full max-h-64 object-contain rounded-lg"
                   />
                   <Button
                     type="button"
@@ -443,9 +443,9 @@ const ProductCreate: React.FC = () => {
                   </Button>
                 </div>
               ) : (
-                <div className="text-center">
+                <div className="text-center mb-4">
                   <ImageIcon className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-600 mb-3">Arrastra una imagen o haz clic para seleccionar</p>
+                  <p className="text-sm text-gray-600">Arrastra una imagen o haz clic para seleccionar</p>
                 </div>
               )}
               <input
@@ -458,7 +458,7 @@ const ProductCreate: React.FC = () => {
                     setImagePreview(URL.createObjectURL(f));
                   }
                 }}
-                className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-secondary hover:file:bg-orange-100"
+                className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-secondary hover:file:bg-orange-100 cursor-pointer"
               />
             </div>
           </div>

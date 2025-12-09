@@ -63,9 +63,10 @@ interface SortableProductProps {
   product: any;
   onEdit: (product: any) => void;
   onDelete: (product: any) => void;
+  cacheBuster: number;
 }
 
-function SortableProduct({ product, onEdit, onDelete }: SortableProductProps) {
+function SortableProduct({ product, onEdit, onDelete, cacheBuster }: SortableProductProps) {
   const {
     attributes,
     listeners,
@@ -101,7 +102,7 @@ function SortableProduct({ product, onEdit, onDelete }: SortableProductProps) {
         {product.image && (
           <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-gray-100">
             <img
-              src={`/images/${product.image}`}
+              src={`/images/${product.image}?v=${cacheBuster}`}
               alt={product.name}
               className="w-full h-full object-cover"
             />
@@ -157,8 +158,12 @@ const ProductEdit: React.FC = () => {
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageRemoved, setImageRemoved] = useState(false); // Track if user removed existing image
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  
+  // Cache buster to force image refresh after upload
+  const [imageCacheBuster, setImageCacheBuster] = useState(Date.now());
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<any | null>(null);
@@ -201,6 +206,7 @@ const ProductEdit: React.FC = () => {
     setCategoryId(p.categoryId ? String(p.categoryId) : "0");
     setImagePreview(p.image ? `/images/${p.image}` : null);
     setImageFile(null);
+    setImageRemoved(false);
     setUploadProgress(0);
     // Load sizes for this product
     if (p.sizes && p.sizes.length > 0) {
@@ -224,6 +230,7 @@ const ProductEdit: React.FC = () => {
     setCategoryId("");
     setImageFile(null);
     setImagePreview(null);
+    setImageRemoved(false);
     setEditingSizes([]);
   };
 
@@ -488,6 +495,9 @@ const ProductEdit: React.FC = () => {
           t.update({ id: t.id, title: "Error al guardar imagen", description: message });
           throw new Error(message);
         }
+      } else if (imageRemoved) {
+        // User removed the image without adding a new one
+        payload.image = null;
       }
 
       const res = await apiFetch(`/api/products/${editing.id}`, {
@@ -501,6 +511,10 @@ const ProductEdit: React.FC = () => {
       await saveSizes(editing.id);
       
       toast({ title: "Producto actualizado", description: data.name });
+      
+      // Update cache buster to force image refresh
+      setImageCacheBuster(Date.now());
+      
       await load();
       closeEditor();
     } catch (err: any) {
@@ -592,6 +606,7 @@ const ProductEdit: React.FC = () => {
                           setProductToDelete(product);
                           setDeleteConfirmOpen(true);
                         }}
+                        cacheBuster={imageCacheBuster}
                       />
                     </ScrollReveal>
                   ))}
@@ -732,11 +747,11 @@ const ProductEdit: React.FC = () => {
                 <label className="text-sm font-semibold text-gray-700">Imagen del Producto</label>
                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-orange-400 transition-colors">
                   {imagePreview ? (
-                    <div className="relative">
+                    <div className="relative mb-4">
                       <img 
                         src={imagePreview} 
                         alt="preview" 
-                        className="w-full max-h-64 object-contain rounded-lg mb-4"
+                        className="w-full max-h-64 object-contain rounded-lg"
                       />
                       <Button
                         type="button"
@@ -745,6 +760,7 @@ const ProductEdit: React.FC = () => {
                         onClick={() => {
                           setImageFile(null);
                           setImagePreview(null);
+                          setImageRemoved(true);
                         }}
                         className="absolute top-2 right-2"
                       >
@@ -753,9 +769,9 @@ const ProductEdit: React.FC = () => {
                       </Button>
                     </div>
                   ) : (
-                    <div className="text-center">
+                    <div className="text-center mb-4">
                       <ImageIcon className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-600 mb-3">Arrastra una imagen o haz clic para seleccionar</p>
+                      <p className="text-sm text-gray-600">Arrastra una imagen o haz clic para seleccionar</p>
                     </div>
                   )}
                   <input
@@ -766,9 +782,10 @@ const ProductEdit: React.FC = () => {
                       if (f) {
                         setImageFile(f);
                         setImagePreview(URL.createObjectURL(f));
+                        setImageRemoved(false);
                       }
                     }}
-                    className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-secondary hover:file:bg-orange-100"
+                    className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-secondary hover:file:bg-orange-100 cursor-pointer"
                   />
                 </div>
               </div>

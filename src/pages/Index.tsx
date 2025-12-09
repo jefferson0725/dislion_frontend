@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
-import { Search, Menu, X, Heart } from "lucide-react";
+import { Search, Menu, X, Heart, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import AnimatedProductCard from "@/components/AnimatedProductCard";
 import CategoryFilter from "@/components/CategoryFilter";
@@ -13,6 +13,7 @@ import heroBanner from "@/assets/logo.png";
 import { motion, AnimatePresence } from "framer-motion";
 
 // products will be loaded from local JSON file
+const PRODUCTS_PER_PAGE = 12; // Number of products to load per batch
 
 const Index = () => {
   const { wishlist } = useWishlist();
@@ -34,6 +35,11 @@ const Index = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [productsError, setProductsError] = useState<string | null>(null);
+  
+  // Pagination state
+  const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_PAGE);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const loaderRef = useRef<HTMLDivElement>(null);
 
   const handleMenuToggle = () => {
     if (isMobileMenuOpen) {
@@ -133,6 +139,43 @@ const Index = () => {
       const matchesSearch = String(product.name || "").toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
   });
+
+  // Reset visible count when filter changes
+  useEffect(() => {
+    setVisibleCount(PRODUCTS_PER_PAGE);
+  }, [activeCategory, searchQuery]);
+
+  // Products to display (paginated)
+  const displayedProducts = filteredProducts.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredProducts.length;
+
+  // Infinite scroll observer
+  const loadMore = useCallback(() => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    // Small delay for smooth UX
+    setTimeout(() => {
+      setVisibleCount(prev => prev + PRODUCTS_PER_PAGE);
+      setLoadingMore(false);
+    }, 300);
+  }, [loadingMore, hasMore]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [loadMore, hasMore]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -387,14 +430,14 @@ const Index = () => {
               {activeCategory === "Todos" ? "Todos los Productos" : activeCategory}
             </h2>
             <p className="text-muted-foreground">
-              {filteredProducts.length} productos
+              {displayedProducts.length} de {filteredProducts.length} productos
             </p>
           </div>
           <motion.div 
             key={activeCategory}
             className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-6"
           >
-            {filteredProducts.map((product, index) => (
+            {displayedProducts.map((product, index) => (
               <AnimatedProductCard 
                 key={product.id}
                 product={product}
@@ -402,6 +445,31 @@ const Index = () => {
               />
             ))}
           </motion.div>
+          
+          {/* Infinite scroll loader */}
+          {hasMore && (
+            <div 
+              ref={loaderRef}
+              className="flex justify-center items-center py-8 mt-4"
+            >
+              {loadingMore ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Cargando más productos...</span>
+                </div>
+              ) : (
+                <div className="h-8" /> 
+              )}
+            </div>
+          )}
+          
+          {/* End of products message */}
+          {!hasMore && filteredProducts.length > PRODUCTS_PER_PAGE && (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>Has visto todos los productos</p>
+            </div>
+          )}
+          
           {filteredProducts.length === 0 && (
             <div className="py-20 text-center">
               <p className="text-xl text-muted-foreground">

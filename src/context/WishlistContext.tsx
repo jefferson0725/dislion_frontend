@@ -13,12 +13,14 @@ interface WishlistItem {
     image: string | null;
   } | null;
   uniqueKey: string; // productId o productId-sizeId
+  quantity: number; // cantidad deseada
 }
 
 interface WishlistContextType {
   wishlist: WishlistItem[];
-  addToWishlist: (product: WishlistItem) => void;
+  addToWishlist: (product: Omit<WishlistItem, 'quantity'>) => void;
   removeFromWishlist: (uniqueKey: string) => void;
+  updateQuantity: (uniqueKey: string, quantity: number) => void;
   isInWishlist: (uniqueKey: string) => boolean;
   clearWishlist: () => void;
 }
@@ -49,16 +51,24 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [wishlist]);
 
-  const addToWishlist = useCallback((product: WishlistItem) => {
+  const addToWishlist = useCallback((product: Omit<WishlistItem, 'quantity'>) => {
     setWishlist((prev) => {
       const exists = prev.find((p) => p.uniqueKey === product.uniqueKey);
       if (exists) return prev;
-      return [...prev, product];
+      return [...prev, { ...product, quantity: 1 }];
     });
   }, []);
 
   const removeFromWishlist = useCallback((uniqueKey: string) => {
     setWishlist((prev) => prev.filter((p) => p.uniqueKey !== uniqueKey));
+  }, []);
+
+  const updateQuantity = useCallback((uniqueKey: string, quantity: number) => {
+    setWishlist((prev) =>
+      prev.map((p) =>
+        p.uniqueKey === uniqueKey ? { ...p, quantity: Math.max(1, quantity) } : p
+      )
+    );
   }, []);
 
   const isInWishlist = useCallback((uniqueKey: string) => {
@@ -70,8 +80,8 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   const value = useMemo(
-    () => ({ wishlist, addToWishlist, removeFromWishlist, isInWishlist, clearWishlist }),
-    [wishlist, addToWishlist, removeFromWishlist, isInWishlist, clearWishlist]
+    () => ({ wishlist, addToWishlist, removeFromWishlist, updateQuantity, isInWishlist, clearWishlist }),
+    [wishlist, addToWishlist, removeFromWishlist, updateQuantity, isInWishlist, clearWishlist]
   );
 
   return (

@@ -6,12 +6,12 @@ import { useWishlistStore } from '../store/wishlistStore';
  * Permite usar Zustand sin cambiar todos los componentes
  */
 export const useWishlist = () => {
-  const { wishlist, addToWishlist, removeFromWishlist, isInWishlist, clearWishlist, loadFromStorage } = useWishlistStore();
+  const { wishlist, addToWishlist, removeFromWishlist, updateQuantity, isInWishlist, clearWishlist, loadFromStorage } = useWishlistStore();
 
   // Cargar datos al montar
   useEffect(() => {
     loadFromStorage();
   }, [loadFromStorage]);
 
-  return { wishlist, addToWishlist, removeFromWishlist, isInWishlist, clearWishlist };
+  return { wishlist, addToWishlist, removeFromWishlist, updateQuantity, isInWishlist, clearWishlist };
 };
